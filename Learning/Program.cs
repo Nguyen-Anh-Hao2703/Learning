@@ -17,6 +17,8 @@ builder.Services.AddAuthentication("MyCookieAuth")
         options.LoginPath = "/Login"; // Đường dẫn đến trang đăng nhập
     });
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
