@@ -1,45 +1,57 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Learning.Data;
+using Learning.Models;
 
-AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
-var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-builder.Services.AddRazorPages();
-
-// Thay đoạn UseSqlServer cũ bằng đoạn này
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-builder.Services.AddAuthentication("MyCookieAuth")
-    .AddCookie("MyCookieAuth", options =>
-    {
-        options.Cookie.Name = "MyCookieAuth";
-        options.LoginPath = "/Login"; // Đường dẫn đến trang đăng nhập
-    });
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+internal class Program
 {
-    app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    private static void Main(string[] args)
+    {
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
+        var builder = WebApplication.CreateBuilder(args);
+
+        // Add services to the container.
+        builder.Services.AddRazorPages();
+
+        // Thay đoạn UseSqlServer cũ bằng đoạn này
+        // 1. Cấu hình Database PostgreSQL
+        builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+        // 2. Thêm Identity chuẩn (Dùng ApplicationUser để có FullName, Class, School)
+        builder.Services.AddDefaultIdentity<User>(options =>
+        {
+            options.SignIn.RequireConfirmedAccount = false;
+            options.Password.RequireDigit = false; // Tắt bớt ép buộc mật khẩu cho dễ test
+            options.Password.RequiredLength = 6;
+            options.Password.RequireNonAlphanumeric = false;
+            options.Password.RequireUppercase = false;
+        })
+        .AddEntityFrameworkStores<ApplicationDbContext>();
+
+        builder.Services.AddRazorPages();
+
+        var app = builder.Build();
+
+        // Configure the HTTP request pipeline.
+        if (!app.Environment.IsDevelopment())
+        {
+            app.UseExceptionHandler("/Error");
+            // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+            app.UseHsts();
+        }
+
+        app.UseHttpsRedirection();
+        app.UseStaticFiles(); // Thêm dòng này nếu chưa có để nhận CSS/JS
+
+        app.UseRouting();
+
+        app.UseAuthentication(); // BẮT BUỘC: Xác nhận danh tính người dùng
+        app.UseAuthorization();  // BẮT BUỘC: Kiểm tra quyền truy cập (Chỉ giữ 1 dòng)
+
+        app.MapRazorPages().WithStaticAssets(); // Thêm dòng này để Identity tìm được các trang Register/Login
+        app.Run();
+    }
 }
-
-app.UseHttpsRedirection();
-
-app.UseRouting();
-
-app.UseAuthentication(); // Xác thực ai đang truy cập
-app.UseAuthorization();  // Kiểm tra quyền (Giáo viên hay Học sinh)
-
-app.UseAuthorization();
-
-app.MapStaticAssets();
-app.MapRazorPages()
-   .WithStaticAssets();
-
-app.Run();

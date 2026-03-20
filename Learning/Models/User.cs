@@ -1,8 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 
 namespace Learning.Models
 {
-    public class User
+    public class User : IdentityUser
     {
         [Key] // Khóa chính tự tăng
         public int Id { get; set; }
