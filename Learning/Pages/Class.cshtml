@@ -1,0 +1,68 @@
+﻿@page
+@model ClassModel
+@{
+    ViewData["Title"] = "Chi tiết lớp học";
+}
+
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/Index">Trang chủ</a></li>
+            <li class="breadcrumb-item active">@Model.sName</li>
+            <li class="breadcrumb-item active" aria-current="page">Lớp @Model.cName</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📚 Bài tập Lớp @Model.cName</h2>
+        <span class="badge bg-info text-dark">Giáo viên: @Model.tID</span>
+    </div>
+
+    @if (User.IsInRole("Teacher"))
+    {
+        <div class="upload-section bg-light p-3 mb-4 border shadow-sm">
+            <h5>📤 Tải lên bài học (.slq)</h5>
+            <form method="post" enctype="multipart/form-data" asp-page-handler="UploadFile">
+                @* CỰC KỲ QUAN TRỌNG: Phải có 4 dòng này để gửi thông tin sang code-behind *@
+                <input type="hidden" name="sName" value="@Model.sName" />
+                <input type="hidden" name="cName" value="@Model.cName" />
+                <input type="hidden" name="subID" value="@Model.subID" />
+                <input type="hidden" name="tID" value="@Model.tID" />
+
+                <div class="input-group">
+                    <input type="file" name="UploadFiles" class="form-control"
+                           accept=".qs, .pdf, .docx, .pptx, .mp4, .zip, .mp3" required multiple />
+                    <button type="submit" class="btn btn-primary">Tải lên</button>
+                </div>
+                <small class="text-muted">Định dạng hỗ trợ: .qs Lưu ý: Ứng dụng Learning sẽ lưu file .qs trong thư mục Document</small>
+            </form>
+            <div>
+                Bạn chưa có Learning (Ứng dụng có định dạng .qs)
+                <button><a href = "~/Learning_Setup.exe">>Tải về ngay</a></button>
+            </div>
+        </div>
+    }
+
+    <hr />
+
+    <h5>📚 Danh sách tài liệu hiện có:</h5>
+    <ul class="list-group">
+        @foreach (var file in Model.Files)
+        {
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>📄 @file</span>
+                <a href="~/LearningData/@Model.sName/@Model.cName/@Model.subID/@Model.tID/@file"
+                   download class="btn btn-sm btn-outline-success">Tải về
+                </a>
+                <div>
+                    Bạn chưa có Learning Student (Ứng dụng chạy được định dạng .slq)
+                    <button><a href="~/Learning_Student.exe">>Tải về ngay</a></button>
+                </div>
+            </li>
+        }
+    </ul>
+
+    <div class="mt-4">
+        <a href="/Index" class="btn btn-secondary">Quay lại</a>
+    </div>
+</div>

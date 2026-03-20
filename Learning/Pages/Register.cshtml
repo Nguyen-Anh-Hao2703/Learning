@@ -1,0 +1,51 @@
+﻿@page
+@model Learning.Pages.RegisterModel
+@{
+    ViewData["Title"] = "Đăng ký thành viên";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-4 shadow p-4 rounded bg-light">
+        <h2 class="text-center mb-4">📝 Đăng ký Learning</h2>
+
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="mb-3">
+                <label class="form-label">Tên đăng nhập</label>
+                <input asp-for="NewUser.Username" class="form-control" placeholder="Nhập username..." />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Mật khẩu</label>
+                <input asp-for="NewUser.Password" type="password" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Họ và Tên</label>
+                <input asp-for="NewUser.FullName" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Bạn là ai?</label>
+                <select asp-for="NewUser.Role" class="form-select">
+                    <option value="Student">Học sinh</option>
+                    <option value="Teacher">Giáo viên</option>
+                </select>
+                <div id="studentFields" style="block">
+                    <div class="mb-3">
+                        <label class="form-label">Tên Trường</label>
+                        <input type="text" asp-for="NewUser.School" class="form-control" placeholder="Ví dụ: THPT Nguyễn Du" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Lớp</label>
+                        <input type="text" asp-for="NewUser.Class" class="form-control" placeholder="Ví dụ: 10A1" />
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Đăng ký ngay</button>
+        </form>
+    </div>
+</div>
+
