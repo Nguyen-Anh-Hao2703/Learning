@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Learning.Data;
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -16,8 +18,6 @@ builder.Services.AddAuthentication("MyCookieAuth")
         options.Cookie.Name = "MyCookieAuth";
         options.LoginPath = "/Login"; // Đường dẫn đến trang đăng nhập
     });
-
-AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var app = builder.Build();
 
