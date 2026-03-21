@@ -52,18 +52,28 @@ namespace Learning.Pages
         private void LoadData(string school, string cls)
         {
             if (string.IsNullOrEmpty(school) || string.IsNullOrEmpty(cls)) return;
-            string classPath = Path.Combine(_hostEnvironment.WebRootPath, "LearningData", school, cls);
 
-            if (Directory.Exists(classPath))
+            // Đảm bảo đường dẫn chuẩn xác kể cả khi có khoảng trắng
+            string classPath = Path.Combine(_hostEnvironment.WebRootPath, "LearningData", school.Trim(), cls.Trim());
+
+            if (!Directory.Exists(classPath))
             {
-                var subjectDirs = Directory.GetDirectories(classPath);
-                foreach (var subDir in subjectDirs)
-                {
-                    string subName = Path.GetFileName(subDir);
-                    if (!string.IsNullOrEmpty(Subject) && !subName.Contains(Subject, StringComparison.OrdinalIgnoreCase))
-                        continue;
+                Directory.CreateDirectory(classPath);
+                return; // Thư mục mới tạo thì chắc chắn chưa có môn học
+            }
 
-                    var teacherDirs = Directory.GetDirectories(subDir);
+            var subjectDirs = Directory.GetDirectories(classPath);
+            foreach (var subDir in subjectDirs)
+            {
+                string subName = Path.GetFileName(subDir);
+
+                if (!string.IsNullOrEmpty(Subject) && !subName.Contains(Subject, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var teacherDirs = Directory.GetDirectories(subDir);
+
+                if (teacherDirs.Length > 0)
+                {
                     foreach (var tDir in teacherDirs)
                     {
                         StudentLessons.Add(new ClassFolder
@@ -72,6 +82,15 @@ namespace Learning.Pages
                             Teacher = Path.GetFileName(tDir)
                         });
                     }
+                }
+                else
+                {
+                    // Nếu môn học mới tạo, chưa có folder GV bên trong, vẫn cho hiện lên danh sách
+                    StudentLessons.Add(new ClassFolder
+                    {
+                        Subject = subName,
+                        Teacher = "Chưa có tài liệu"
+                    });
                 }
             }
         }
