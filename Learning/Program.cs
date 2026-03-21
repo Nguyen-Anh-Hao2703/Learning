@@ -18,7 +18,10 @@ internal class Program
         // Thay đoạn UseSqlServer cũ bằng đoạn này
         // 1. Cấu hình Database PostgreSQL
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
+            npgsqlOptions => {
+                npgsqlOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null); // Tự động thử lại nếu nghẽn mạng
+            }));
 
         // 2. Thêm Identity chuẩn (Dùng ApplicationUser để có FullName, Class, School)
         builder.Services.AddDefaultIdentity<User>(options =>
