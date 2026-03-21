@@ -15,10 +15,11 @@ public class ClassModel : PageModel
         _configuration = configuration;
     }
 
-    [BindProperty(SupportsGet = true)] public string sName { get; set; }
-    [BindProperty(SupportsGet = true)] public string cName { get; set; }
-    [BindProperty(SupportsGet = true)] public string subID { get; set; }
-    [BindProperty(SupportsGet = true)] public string tID { get; set; }
+    [BindProperty(SupportsGet = true)] public string sName { get; set; } = "";
+    [BindProperty(SupportsGet = true)] public string cName { get; set; } = "";
+    [BindProperty(SupportsGet = true)] public string subID { get; set; } = "";
+    [BindProperty(SupportsGet = true)] public string tID { get; set; } = "";
+
     public string CurrentUserRole { get; set; } = "";
     public List<string> Files { get; set; } = new List<string>();
 
@@ -26,7 +27,6 @@ public class ClassModel : PageModel
     {
         var url = _configuration["Supabase:Url"];
         var key = _configuration["Supabase:Key"];
-        // Sửa lỗi ép kiểu ở đây bằng cách dùng biến trung gian hoặc ép kiểu trực tiếp
         var client = new Supabase.Client(url, key);
         await client.InitializeAsync();
         return client;
@@ -42,11 +42,16 @@ public class ClassModel : PageModel
             try
             {
                 var client = await GetSupabaseClient();
+                // Đường dẫn chuẩn hóa để liệt kê file
                 string path = $"{RemoveDiacritics(sName)}/{RemoveDiacritics(cName)}/{RemoveDiacritics(subID)}/{RemoveDiacritics(tID)}";
+
                 var result = await client.Storage.From("learning-data").List(path);
                 if (result != null)
                 {
-                    Files = result.Select(x => x.Name).Where(n => n != ".emptyFolderPlaceholder").ToList();
+                    // Lọc bỏ file mồi info.txt và các file ẩn hệ thống
+                    Files = result.Select(x => x.Name)
+                                  .Where(n => n != ".emptyFolderPlaceholder" && n != "info.txt" && !string.IsNullOrEmpty(n))
+                                  .ToList();
                 }
             }
             catch { }
@@ -55,18 +60,44 @@ public class ClassModel : PageModel
 
     public async Task<IActionResult> OnPostUploadFile(List<IFormFile> UploadFiles)
     {
-        var client = await GetSupabaseClient();
-        foreach (var file in UploadFiles)
+        if (UploadFiles == null || UploadFiles.Count == 0) return RedirectToPage();
+
+        try
         {
-            if (file.Length > 0)
+            var client = await GetSupabaseClient();
+            foreach (var file in UploadFiles)
             {
-                string remotePath = $"{RemoveDiacritics(sName)}/{RemoveDiacritics(cName)}/{RemoveDiacritics(subID)}/{RemoveDiacritics(tID)}/{RemoveDiacritics(file.FileName)}";
-                using var ms = new MemoryStream();
-                await file.CopyToAsync(ms);
-                await client.Storage.From("learning-data").Upload(ms.ToArray(), remotePath);
+                if (file.Length > 0)
+                {
+                    // Chuẩn hóa tên file để tránh lỗi "Invalid Key" do có dấu hoặc khoảng trắng
+                    string safeFileName = RemoveDiacritics(file.FileName);
+                    string remotePath = $"{RemoveDiacritics(sName)}/{RemoveDiacritics(cName)}/{RemoveDiacritics(subID)}/{RemoveDiacritics(tID)}/{safeFileName}";
+
+                    using var ms = new MemoryStream();
+                    await file.CopyToAsync(ms);
+
+                    // Upload lên Supabase
+                    await client.Storage.From("learning-data").Upload(ms.ToArray(), remotePath, new Supabase.Storage.FileOptions { Upsert = true });
+                }
             }
         }
+        catch (Exception ex)
+        {
+            TempData["Error"] = "Lỗi tải file: " + ex.Message;
+        }
+
         return RedirectToPage(new { sName, cName, subID, tID });
+    }
+
+    // Hàm cực kỳ quan trọng: Tạo URL để học sinh có thể tải file từ Supabase về máy
+    public string GetFileUrl(string fileName)
+    {
+        var url = _configuration["Supabase:Url"];
+        string bucket = "learning-data";
+        string path = $"{RemoveDiacritics(sName)}/{RemoveDiacritics(cName)}/{RemoveDiacritics(subID)}/{RemoveDiacritics(tID)}/{fileName}";
+
+        // Trả về URL public của Supabase Storage
+        return $"{url}/storage/v1/object/public/{bucket}/{path}";
     }
 
     private string RemoveDiacritics(string text)
