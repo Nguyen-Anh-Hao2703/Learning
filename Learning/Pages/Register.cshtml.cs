@@ -37,6 +37,7 @@ namespace Learning.Pages
             {
                 UserName = Input.Username,
                 FullName = Input.FullName,
+                Password = Input.Password,
                 Role = Input.Role,
                 School = Input.School,
                 Class = Input.Class,
