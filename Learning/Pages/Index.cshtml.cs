@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Learning.Models;
 using System.Security.Claims;
 
 namespace Learning.Pages
@@ -8,10 +10,12 @@ namespace Learning.Pages
     public class IndexModel : PageModel
     {
         private readonly IWebHostEnvironment _hostEnvironment;
+        private readonly UserManager<User> _userManager;
 
-        public IndexModel(IWebHostEnvironment hostEnvironment)
+        public IndexModel(IWebHostEnvironment hostEnvironment, UserManager<User> userManager)
         {
             _hostEnvironment = hostEnvironment;
+            _userManager = userManager;
         }
 
         public class ClassFolder
@@ -20,33 +24,34 @@ namespace Learning.Pages
             public string Teacher { get; set; } = "";
         }
 
-        // Danh sách hiển thị chung cho cả 2 Role
         public List<ClassFolder> StudentLessons { get; set; } = new List<ClassFolder>();
-
         public string NameSchool { get; set; } = "";
         public string NameClass { get; set; } = "";
+        public string CurrentUserRole { get; set; } = ""; // Biến quan trọng để check Role
 
         [BindProperty(SupportsGet = true)]
         public string? Subject { get; set; }
 
-        public void OnGet()
+        public async Task OnGetAsync()
         {
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
-                // Lấy thông tin từ Claim
-                NameSchool = User.FindFirst("School")?.Value ?? "";
-                NameClass = User.FindFirst("Class")?.Value ?? "";
+                // Lấy thông tin User trực tiếp từ DB để biết Role là gì
+                var user = await _userManager.FindByNameAsync(User.Identity.Name);
+                if (user != null)
+                {
+                    CurrentUserRole = user.Role;
+                    NameSchool = user.School ?? "";
+                    NameClass = user.Class ?? "";
 
-                // Gọi hàm quét thư mục dựa trên Trường và Lớp của User
-                LoadData(NameSchool, NameClass);
+                    LoadData(NameSchool, NameClass);
+                }
             }
         }
 
         private void LoadData(string school, string cls)
         {
             if (string.IsNullOrEmpty(school) || string.IsNullOrEmpty(cls)) return;
-
-            // Đường dẫn: wwwroot/LearningData/TenTruong/TenLop
             string classPath = Path.Combine(_hostEnvironment.WebRootPath, "LearningData", school, cls);
 
             if (Directory.Exists(classPath))
@@ -55,8 +60,6 @@ namespace Learning.Pages
                 foreach (var subDir in subjectDirs)
                 {
                     string subName = Path.GetFileName(subDir);
-
-                    // Nếu có tìm kiếm (Subject) mà không khớp thì bỏ qua
                     if (!string.IsNullOrEmpty(Subject) && !subName.Contains(Subject, StringComparison.OrdinalIgnoreCase))
                         continue;
 
@@ -77,34 +80,23 @@ namespace Learning.Pages
         {
             var school = User.FindFirst("School")?.Value;
             var cls = User.FindFirst("Class")?.Value;
-            var teacherName = User.Identity?.Name; // Dùng Username làm folder định danh GV
+            var teacherName = User.Identity?.Name;
 
             if (string.IsNullOrEmpty(school) || string.IsNullOrEmpty(cls) || string.IsNullOrEmpty(SubjectID))
-            {
-                // Nếu nó chạy vào đây, nghĩa là Claim của bạn đang bị NULL
                 return RedirectToPage();
-            }
 
-            // Cấu trúc folder đồng bộ: LearningData -> Trường -> Lớp -> Môn -> TênGV
             var path = Path.Combine(_hostEnvironment.WebRootPath, "LearningData", school, cls, SubjectID, teacherName ?? "Unknown");
-
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
+            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
 
             return RedirectToPage();
         }
 
         public async Task<IActionResult> OnPostLogout()
         {
-            await HttpContext.SignOutAsync("MyCookieAuth"); // Phải khớp với tên Scheme bạn đặt trong Program.cs
+            await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
             return RedirectToPage("/Index");
         }
 
-        public IActionResult OnPostFindFolder(string SubjectID)
-        {
-            return RedirectToPage(new { Subject = SubjectID });
-        }
+        public IActionResult OnPostFindFolder(string SubjectID) => RedirectToPage(new { Subject = SubjectID });
     }
 }

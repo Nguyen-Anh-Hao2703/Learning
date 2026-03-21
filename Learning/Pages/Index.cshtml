@@ -12,19 +12,18 @@
             <p class="lead">Hệ thống học tập: <b>@Model.NameSchool</b> - Lớp: <b>@Model.NameClass</b></p>
         </div>
 
-        @if (User.IsInRole("Teacher"))
+        @if (Model.CurrentUserRole == "Teacher")
         {
             <div class="admin-panel bg-light p-4 mb-5 border-start border-primary border-4 shadow-sm">
                 <h5 class="mb-3">🛠️ Công cụ quản lý Môn học</h5>
                 <form method="post" asp-page-handler="CreateFolder" class="row g-2">
                     <div class="col-md-9">
-                        <input type="text" name="SubjectID" placeholder="Nhập Mã Môn học (VD: TOAN10, VATLY...)" class="form-control" required />
+                        <input type="text" name="SubjectID" placeholder="Nhập Mã Môn học..." class="form-control" required />
                     </div>
                     <div class="col-md-3">
                         <button type="submit" class="btn btn-primary w-100">➕ Tạo môn học</button>
                     </div>
                 </form>
-                <small class="text-muted mt-2 d-block">* Môn học sẽ được tạo tự động cho Trường và Lớp của bạn.</small>
             </div>
         }
 
