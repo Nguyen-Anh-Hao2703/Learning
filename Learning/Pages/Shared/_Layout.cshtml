@@ -21,30 +21,15 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Trang chủ</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
-                        </li>
-                        @if (User.Identity!.IsAuthenticated)
-                        {
-                            <li class="nav-item">
-                                <form method="post" asp-page="/Index" asp-page-handler="Logout" class="form-inline">
-                                    <button type="submit" class="nav-link btn btn-link text-dark" style="text-decoration:none;">
-                                        Đăng xuất (@User.Identity.Name)
-                                    </button>
-                                </form>
-                            </li>
-                        }
-                        else
-                        {
-                            <li>
-                                <a href="/Login" class="btn btn-primary btn-lg px-4 gap-3">Đăng nhập</a>
-                            </li>
-                            <li>
-                                <a href="/Register" class="btn btn-outline-secondary btn-lg px-4">Đăng kí</a>
-                            </li>
-                        }
+                            <form method="post" asp-page="/Index" asp-page-handler="Logout" class="form-inline">
+                                <button type="submit" class="nav-link btn btn-link text-dark" style="text-decoration:none;">
+                                    Đăng xuất (@User.Identity.Name)
+                                </button>
+                            </form>
+                         </li>
                         
                     </ul>
                 </div>
@@ -59,7 +44,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2026 - Learning - <a asp-area="" asp-page="/Privacy">Privacy</a>
+            &copy; 2026 - Learning - Nguyễn Anh Hào
         </div>
     </footer>
 

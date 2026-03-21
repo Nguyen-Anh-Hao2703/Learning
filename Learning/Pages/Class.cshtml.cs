@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Supabase;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Learning.Models;
@@ -7,11 +8,13 @@ public class ClassModel : PageModel
 {
     private readonly IWebHostEnvironment _environment;
     private readonly UserManager<User> _userManager;
+    private readonly IConfiguration _configuration; // Thêm dòng này
 
-    public ClassModel(IWebHostEnvironment environment, UserManager<User> userManager)
+    public ClassModel(IWebHostEnvironment environment, UserManager<User> userManager, IConfiguration configuration)
     {
         _environment = environment;
         _userManager = userManager;
+        _configuration = configuration; // Thêm dòng này
     }
 
     [BindProperty(SupportsGet = true)] public string sName { get; set; }
@@ -21,6 +24,16 @@ public class ClassModel : PageModel
     public string CurrentUserRole { get; set; } = "";
     public List<string> Files { get; set; } = new List<string>();
 
+    // Hàm dùng chung để tạo kết nối Supabase
+    private async Task<Supabase.Client> GetSupabaseClient()
+    {
+        var url = _configuration["Supabase:Url"];
+        var key = _configuration["Supabase:Key"];
+        var client = new Supabase.Client(url, key);
+        await client.InitializeAsync();
+        return client;
+    }
+
     public async Task OnGetAsync()
     {
         if (User.Identity.IsAuthenticated)
@@ -29,23 +42,37 @@ public class ClassModel : PageModel
             CurrentUserRole = user?.Role ?? "";
         }
 
-        var path = Path.Combine(_environment.WebRootPath, "LearningData", sName, cName, subID, tID);
-        if (Directory.Exists(path))
-            Files = Directory.GetFiles(path).Select(Path.GetFileName).ToList()!;
+        try
+        {
+            var client = await GetSupabaseClient();
+            var folderPath = $"{sName}/{cName}/{subID}/{tID}";
+            var result = await client.Storage.From("learning-data").List(folderPath);
+
+            if (result != null)
+            {
+                // Lọc bỏ tên folder, chỉ lấy tên file
+                Files = result.Select(x => x.Name).Where(name => name != ".emptyFolderPlaceholder").ToList();
+            }
+        }
+        catch { }
     }
 
     public async Task<IActionResult> OnPostUploadFile(List<IFormFile> UploadFiles)
     {
-        var path = Path.Combine(_environment.WebRootPath, "LearningData", sName, cName, subID, tID);
-        if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+        var client = await GetSupabaseClient();
 
         foreach (var file in UploadFiles)
         {
             if (file.Length > 0)
             {
-                var filePath = Path.Combine(path, file.FileName);
-                using (var stream = System.IO.File.Create(filePath))
-                    await file.CopyToAsync(stream);
+                var remotePath = $"{sName}/{cName}/{subID}/{tID}/{file.FileName}";
+
+                using var ms = new MemoryStream();
+                await file.CopyToAsync(ms);
+                var fileBytes = ms.ToArray();
+
+                // Upload lên Supabase
+                await client.Storage.From("learning-data").Upload(fileBytes, remotePath);
             }
         }
         return RedirectToPage(new { sName, cName, subID, tID });
