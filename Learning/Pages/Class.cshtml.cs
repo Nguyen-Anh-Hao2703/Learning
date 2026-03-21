@@ -42,15 +42,14 @@ public class ClassModel : PageModel
             try
             {
                 var client = await GetSupabaseClient();
-                // Đường dẫn chuẩn hóa để liệt kê file
                 string path = $"{RemoveDiacritics(sName)}/{RemoveDiacritics(cName)}/{RemoveDiacritics(subID)}/{RemoveDiacritics(tID)}";
 
                 var result = await client.Storage.From("learning-data").List(path);
                 if (result != null)
                 {
-                    // Lọc bỏ file mồi info.txt và các file ẩn hệ thống
+                    // Lọc bỏ các file mồi hệ thống để danh sách sạch đẹp
                     Files = result.Select(x => x.Name)
-                                  .Where(n => n != ".emptyFolderPlaceholder" && n != "info.txt" && !string.IsNullOrEmpty(n))
+                                  .Where(n => n != ".emptyFolderPlaceholder" && n != "info.txt" && n != "init.txt" && !string.IsNullOrEmpty(n))
                                   .ToList();
                 }
             }
@@ -69,34 +68,33 @@ public class ClassModel : PageModel
             {
                 if (file.Length > 0)
                 {
-                    // Chuẩn hóa tên file để tránh lỗi "Invalid Key" do có dấu hoặc khoảng trắng
+                    // Xử lý tên file: bỏ dấu và khoảng trắng để tránh lỗi 400/Invalid Key
                     string safeFileName = RemoveDiacritics(file.FileName);
                     string remotePath = $"{RemoveDiacritics(sName)}/{RemoveDiacritics(cName)}/{RemoveDiacritics(subID)}/{RemoveDiacritics(tID)}/{safeFileName}";
 
                     using var ms = new MemoryStream();
                     await file.CopyToAsync(ms);
 
-                    // Upload lên Supabase
+                    // Upload lên Supabase với tùy chọn Upsert (ghi đè nếu trùng tên)
                     await client.Storage.From("learning-data").Upload(ms.ToArray(), remotePath, new Supabase.Storage.FileOptions { Upsert = true });
                 }
             }
         }
         catch (Exception ex)
         {
-            TempData["Error"] = "Lỗi tải file: " + ex.Message;
+            TempData["Error"] = "Lỗi: " + ex.Message;
         }
 
         return RedirectToPage(new { sName, cName, subID, tID });
     }
 
-    // Hàm cực kỳ quan trọng: Tạo URL để học sinh có thể tải file từ Supabase về máy
+    // Hàm sinh URL tải file trực tiếp từ mây Supabase
     public string GetFileUrl(string fileName)
     {
         var url = _configuration["Supabase:Url"];
         string bucket = "learning-data";
         string path = $"{RemoveDiacritics(sName)}/{RemoveDiacritics(cName)}/{RemoveDiacritics(subID)}/{RemoveDiacritics(tID)}/{fileName}";
 
-        // Trả về URL public của Supabase Storage
         return $"{url}/storage/v1/object/public/{bucket}/{path}";
     }
 
