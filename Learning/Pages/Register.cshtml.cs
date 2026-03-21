@@ -25,7 +25,7 @@ namespace Learning.Pages
             if (!ModelState.IsValid) return Page();
 
             // Kiểm tra xem Username đã tồn tại chưa
-            if (_context.Users.Any(u => u.Username == NewUser.Username))
+            if (_context.Users.Any(u => u.UserName == NewUser.UserName))
             {
                 ModelState.AddModelError("", "Tên đăng nhập đã tồn tại!");
                 return Page();
@@ -33,7 +33,7 @@ namespace Learning.Pages
 
             var newUser = new User
             {
-                Username = NewUser.Username,
+                UserName = NewUser.UserName,
                 Password = NewUser.Password,
                 Role = NewUser.Role,
                 School = NewUser.Role == "" ? NewUser.School : null,
@@ -41,7 +41,7 @@ namespace Learning.Pages
             };
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, newUser.Username),
+                new Claim(ClaimTypes.Name, newUser.UserName),
                 new Claim(ClaimTypes.Role, newUser.Role),
                 // THÊM 2 DÒNG NÀY: Lưu thông tin vào Identity
                 new Claim("School", newUser.School ?? ""),

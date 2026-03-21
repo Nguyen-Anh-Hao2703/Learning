@@ -5,15 +5,6 @@ namespace Learning.Models
 {
     public class User : IdentityUser
     {
-        [Key] // Khóa chính tự tăng
-        public int Id { get; set; }
-
-        [Required(ErrorMessage = "Tên đăng nhập không được để trống")]
-        [StringLength(50)]
-        public string Username { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "Mật khẩu không được để trống")]
-        [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
 
         [Display(Name = "Họ và Tên")]

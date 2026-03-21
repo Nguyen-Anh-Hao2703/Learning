@@ -20,14 +20,14 @@ namespace Learning.Pages
         public async Task<IActionResult> OnPostAsync()
         {
             // Tìm user trong SQL Server
-            var user = _context.Users.FirstOrDefault(u => u.Username == Username && u.Password == Password);
+            var user = _context.Users.FirstOrDefault(u => u.UserName == Username && u.Password == Password);
 
             if (user != null)
             {
                 // Tạo danh tính cho người dùng
                 var claims = new List<Claim>
                 {
-                    new Claim(ClaimTypes.Name, user.Username),
+                    new Claim(ClaimTypes.Name, user.UserName),
                     new Claim(ClaimTypes.Role, user.Role),
                     // QUAN TRỌNG: Phải nạp 2 dòng này từ Database vào Cookie
                     new Claim("School", user.School ?? ""),
