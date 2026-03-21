@@ -13,33 +13,33 @@
 
             <div class="mb-3">
                 <label class="form-label">Tên đăng nhập</label>
-                <input asp-for="NewUser.UserName" class="form-control" placeholder="Nhập username..." />
+                <input asp-for="Input.Username" class="form-control" placeholder="Nhập username..." />
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Mật khẩu</label>
-                <input asp-for="NewUser.Password" type="password" class="form-control" />
+                <input asp-for="Input.Password" type="password" class="form-control" />
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Họ và Tên</label>
-                <input asp-for="NewUser.FullName" class="form-control" />
+                <input asp-for="Input.FullName" class="form-control" />
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Bạn là ai?</label>
-                <select asp-for="NewUser.Role" class="form-select">
+                <select asp-for="Input.Role" class="form-select">
                     <option value="Student">Học sinh</option>
                     <option value="Teacher">Giáo viên</option>
                 </select>
                 <div id="studentFields" style="block">
                     <div class="mb-3">
                         <label class="form-label">Tên Trường</label>
-                        <input type="text" asp-for="NewUser.School" class="form-control" placeholder="Ví dụ: THPT Nguyễn Du" />
+                        <input type="text" asp-for="Input.School" class="form-control" placeholder="Ví dụ: THPT Nguyễn Du" />
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Lớp</label>
-                        <input type="text" asp-for="NewUser.Class" class="form-control" placeholder="Ví dụ: 10A1" />
+                        <input type="text" asp-for="Input.Class" class="form-control" placeholder="Ví dụ: 10A1" />
                     </div>
                 </div>
             </div>

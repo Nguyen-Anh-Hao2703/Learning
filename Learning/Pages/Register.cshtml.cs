@@ -1,56 +1,62 @@
-using Learning.Data;
 using Learning.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Security.Claims;
 
 namespace Learning.Pages
 {
     public class RegisterModel : PageModel
     {
-        private readonly ApplicationDbContext _context;
+        private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
 
-        public RegisterModel(ApplicationDbContext context)
+        public RegisterModel(UserManager<User> userManager, SignInManager<User> signInManager)
         {
-            _context = context;
+            _userManager = userManager;
+            _signInManager = signInManager;
         }
 
         [BindProperty]
-        public User NewUser { get; set; } = default!;
+        public InputModel Input { get; set; } = new();
 
-        public void OnGet() { }
+        public class InputModel
+        {
+            public string Username { get; set; } = "";
+            public string Password { get; set; } = "";
+            public string FullName { get; set; } = "";
+            public string Role { get; set; } = ""; // "Teacher" hoặc "Student"
+            public string? School { get; set; }
+            public string? Class { get; set; }
+        }
 
         public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid) return Page();
 
-            // Kiểm tra xem Username đã tồn tại chưa
-            if (_context.Users.Any(u => u.UserName == NewUser.UserName))
+            var user = new User
             {
-                ModelState.AddModelError("", "Tên đăng nhập đã tồn tại!");
-                return Page();
+                UserName = Input.Username,
+                FullName = Input.FullName,
+                Role = Input.Role,
+                School = Input.School,
+                Class = Input.Class,
+                CreatedAt = DateTime.UtcNow // Dùng UtcNow cho PostgreSQL
+            };
+
+            // UserManager sẽ tự mã hóa mật khẩu và lưu vào cột PasswordHash
+            var result = await _userManager.CreateAsync(user, Input.Password);
+
+            if (result.Succeeded)
+            {
+                await _signInManager.SignInAsync(user, isPersistent: false);
+                return RedirectToPage("/Index");
             }
 
-            var newUser = new User
+            foreach (var error in result.Errors)
             {
-                UserName = NewUser.UserName,
-                Password = NewUser.Password,
-                Role = NewUser.Role,
-                School = NewUser.Role == "" ? NewUser.School : null,
-                Class = NewUser.Role == "" ? NewUser.Class : null
-            };
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, newUser.UserName),
-                new Claim(ClaimTypes.Role, newUser.Role),
-                // THÊM 2 DÒNG NÀY: Lưu thông tin vào Identity
-                new Claim("School", newUser.School ?? ""),
-                new Claim("Class", newUser.Class ?? "")
-            };
-
-            _context.Users.Add(NewUser);
-            await _context.SaveChangesAsync();
-            return RedirectToPage("./Index"); // Đăng ký xong thì về trang chủ
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+            return Page();
         }
     }
 }
