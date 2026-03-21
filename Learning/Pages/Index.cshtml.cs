@@ -97,15 +97,21 @@ namespace Learning.Pages
 
         public IActionResult OnPostCreateFolder(string SubjectID)
         {
-            var school = User.FindFirst("School")?.Value;
-            var cls = User.FindFirst("Class")?.Value;
-            var teacherName = User.Identity?.Name;
+            // Lấy trực tiếp từ database cho chắc ăn thay vì Claim (vì Claim có thể bị cũ)
+            var user = _userManager.FindByNameAsync(User.Identity.Name).Result;
 
-            if (string.IsNullOrEmpty(school) || string.IsNullOrEmpty(cls) || string.IsNullOrEmpty(SubjectID))
-                return RedirectToPage();
+            if (user == null || string.IsNullOrEmpty(SubjectID)) return RedirectToPage();
 
-            var path = Path.Combine(_hostEnvironment.WebRootPath, "LearningData", school, cls, SubjectID, teacherName ?? "Unknown");
-            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+            var school = user.School?.Trim();
+            var cls = user.Class?.Trim();
+            var teacherName = user.UserName;
+
+            var path = Path.Combine(_hostEnvironment.WebRootPath, "LearningData", school, cls, SubjectID.Trim(), teacherName);
+
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
 
             return RedirectToPage();
         }
