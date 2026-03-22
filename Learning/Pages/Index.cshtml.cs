@@ -15,7 +15,6 @@ public class IndexModel : PageModel
         _configuration = configuration;
     }
 
-    // --- CÁC BIẾN NÀY PHẢI CÓ ĐỂ HIỂN THỊ RA GIAO DIỆN ---
     public string NameSchool { get; set; } = "";
     public string NameClass { get; set; } = "";
     public string CurrentUserRole { get; set; } = "";
@@ -39,7 +38,7 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        if (User.Identity != null && User.Identity.IsAuthenticated)
+        if (User.Identity?.IsAuthenticated == true)
         {
             var user = await _userManager.FindByNameAsync(User.Identity.Name);
             if (user != null)
@@ -47,8 +46,6 @@ public class IndexModel : PageModel
                 NameSchool = user.School;
                 NameClass = user.Class;
                 CurrentUserRole = user.Role;
-
-                // Hàm này dùng để load danh sách bài tập từ Supabase hiện lên trang chủ
                 await LoadLessons(user.School, user.Class);
             }
         }
@@ -60,23 +57,19 @@ public class IndexModel : PageModel
         {
             var client = await GetSupabaseClient();
             string path = $"{RemoveDiacritics(school)}/{RemoveDiacritics(className)}";
-
-            // Liệt kế các thư mục môn học
             var subjects = await client.Storage.From("learning-data").List(path);
+
             if (subjects != null)
             {
                 foreach (var sub in subjects)
                 {
-                    if (sub.Name == ".emptyFolderPlaceholder") continue;
-
-                    // Tiếp tục liệt kê giáo viên trong môn đó
-                    string subPath = $"{path}/{sub.Name}";
-                    var teachers = await client.Storage.From("learning-data").List(subPath);
+                    if (sub.Name.Contains(".emptyFolder")) continue;
+                    var teachers = await client.Storage.From("learning-data").List($"{path}/{sub.Name}");
                     if (teachers != null)
                     {
                         foreach (var t in teachers)
                         {
-                            if (t.Name == ".emptyFolderPlaceholder") continue;
+                            if (t.Name.Contains(".emptyFolder")) continue;
                             StudentLessons.Add(new LessonInfo { Subject = sub.Name, Teacher = t.Name });
                         }
                     }
@@ -94,33 +87,14 @@ public class IndexModel : PageModel
         try
         {
             var client = await GetSupabaseClient();
+            var content = System.Text.Encoding.UTF8.GetBytes("init_" + DateTime.Now.Ticks);
 
-            // --- SỬA CHỖ NÀY: Tạo nội dung file mồi "thật" để tránh lỗi 0 byte ---
-            var contentString = "folder_initialized_at_" + DateTime.Now.ToString();
-            var content = System.Text.Encoding.UTF8.GetBytes(contentString);
+            // Dùng chung hàm RemoveDiacritics để đường dẫn luôn khớp nhau
+            string path = $"{RemoveDiacritics(user.School)}/{RemoveDiacritics(user.Class)}/{RemoveDiacritics(SubjectID)}/{RemoveDiacritics(user.UserName)}/info.txt";
 
-            // Chuẩn hóa đường dẫn
-            string school = RemoveDiacritics(user.School);
-            string @class = RemoveDiacritics(user.Class);
-            string subject = RemoveDiacritics(SubjectID);
-            string userName = RemoveDiacritics(user.UserName);
-
-            // Đường dẫn file info.txt
-            string path = $"{school}/{@class}/{subject}/{userName}/info.txt";
-
-            // Upload với Upsert = true
-            var options = new Supabase.Storage.FileOptions { Upsert = true };
-
-            await client.Storage.From("learning-data").Upload(content, path, options);
-
-            Console.WriteLine($"✅ Thành công: {path}");
+            await client.Storage.From("learning-data").Upload(content, path, new Supabase.Storage.FileOptions { Upsert = true });
         }
-        catch (Exception ex)
-        {
-            // Ghi lỗi chi tiết để debug
-            TempData["Error"] = ex.Message;
-            Console.WriteLine($"❌ Lỗi: {ex.Message}");
-        }
+        catch (Exception ex) { TempData["Error"] = ex.Message; }
 
         return RedirectToPage();
     }
@@ -128,30 +102,17 @@ public class IndexModel : PageModel
     private string RemoveDiacritics(string text)
     {
         if (string.IsNullOrWhiteSpace(text)) return "unknown";
-
-        // 1. Chuyển về dạng không dấu
+        text = text.Replace("Đ", "D").Replace("đ", "d");
         string normalizedString = text.Normalize(System.Text.NormalizationForm.FormD);
         System.Text.StringBuilder sb = new System.Text.StringBuilder();
-
         foreach (char c in normalizedString)
         {
-            System.Globalization.UnicodeCategory unicodeCategory = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c);
-            if (unicodeCategory != System.Globalization.UnicodeCategory.NonSpacingMark)
+            if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark)
             {
-                // 2. Chỉ giữ lại chữ cái và con số, biến tất cả ký tự lạ/dấu chấm/khoảng trắng thành '_'
-                if (char.IsLetterOrDigit(c))
-                {
-                    sb.Append(c);
-                }
-                else
-                {
-                    sb.Append('_');
-                }
+                if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) sb.Append(c);
+                else sb.Append('_');
             }
         }
-
-        // 3. Loại bỏ việc có nhiều dấu gạch dưới liên tiếp và trả về chuỗi sạch
-        string result = sb.ToString().Normalize(System.Text.NormalizationForm.FormC);
-        return System.Text.RegularExpressions.Regex.Replace(result, @"_+", "_").Trim('_');
+        return System.Text.RegularExpressions.Regex.Replace(sb.ToString(), @"_+", "_").Trim('_');
     }
 }

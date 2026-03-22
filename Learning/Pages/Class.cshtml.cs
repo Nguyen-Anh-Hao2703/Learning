@@ -42,14 +42,14 @@ public class ClassModel : PageModel
             try
             {
                 var client = await GetSupabaseClient();
+                // Làm sạch đường dẫn trước khi List file
                 string path = $"{RemoveDiacritics(sName)}/{RemoveDiacritics(cName)}/{RemoveDiacritics(subID)}/{RemoveDiacritics(tID)}";
 
                 var result = await client.Storage.From("learning-data").List(path);
                 if (result != null)
                 {
-                    // Lọc bỏ các file mồi hệ thống để danh sách sạch đẹp
                     Files = result.Select(x => x.Name)
-                                  .Where(n => n != ".emptyFolderPlaceholder" && n != "info.txt" && n != "init.txt" && !string.IsNullOrEmpty(n))
+                                  .Where(n => n != ".emptyFolderPlaceholder" && n != "info.txt" && !string.IsNullOrEmpty(n))
                                   .ToList();
                 }
             }
@@ -68,33 +68,23 @@ public class ClassModel : PageModel
             {
                 if (file.Length > 0)
                 {
-                    // 1. Xử lý tên file cực sạch
+                    // 1. Làm sạch tên file: Giữ lại đuôi file, làm sạch phần tên
                     string extension = Path.GetExtension(file.FileName).ToLower();
                     string fileNameOnly = Path.GetFileNameWithoutExtension(file.FileName);
-
-                    // Chỉ giữ lại chữ cái và số cho tên file
                     string safeFileName = RemoveDiacritics(fileNameOnly) + extension;
 
-                    // 2. ÉP BUỘC làm sạch từng thành phần đường dẫn một lần nữa
-                    string s = RemoveDiacritics(sName);
-                    string c = RemoveDiacritics(cName);
-                    string sub = RemoveDiacritics(subID);
-                    string t = RemoveDiacritics(tID);
-
-                    // 3. Ghép đường dẫn: Đảm bảo không có dấu chấm dư thừa
-                    string remotePath = $"{s}/{c}/{sub}/{t}/{safeFileName}";
+                    // 2. Xây dựng đường dẫn cực sạch
+                    string remotePath = $"{RemoveDiacritics(sName)}/{RemoveDiacritics(cName)}/{RemoveDiacritics(subID)}/{RemoveDiacritics(tID)}/{safeFileName}";
 
                     using var ms = new MemoryStream();
                     await file.CopyToAsync(ms);
 
+                    // 3. Ép kiểu ContentType để Supabase chấp nhận file lạ .qs
                     var options = new Supabase.Storage.FileOptions
                     {
                         Upsert = true,
                         ContentType = "application/octet-stream"
                     };
-
-                    // Ghi Log ra màn hình Console của Render để kiểm tra đường dẫn thực tế
-                    Console.WriteLine($"Uploading to: {remotePath}");
 
                     await client.Storage.From("learning-data").Upload(ms.ToArray(), remotePath, options);
                 }
@@ -102,53 +92,34 @@ public class ClassModel : PageModel
         }
         catch (Exception ex)
         {
-            TempData["Error"] = "Lỗi upload: " + ex.Message;
-            Console.WriteLine("Chi tiết lỗi: " + ex.StackTrace);
+            TempData["Error"] = "Lỗi: " + ex.Message;
         }
 
         return RedirectToPage(new { sName, cName, subID, tID });
     }
 
-    // Hàm sinh URL tải file trực tiếp từ mây Supabase
-    // Hàm sinh URL tải file: Giữ nguyên fileName vì nó đã sạch sẵn rồi
     public string GetFileUrl(string fileName)
     {
         var url = _configuration["Supabase:Url"];
-        string bucket = "learning-data";
-
-        // Chỉ làm sạch các thư mục cha, còn fileName thì giữ nguyên để bảo vệ dấu chấm của đuôi file
         string path = $"{RemoveDiacritics(sName)}/{RemoveDiacritics(cName)}/{RemoveDiacritics(subID)}/{RemoveDiacritics(tID)}/{fileName}";
-
-        return $"{url}/storage/v1/object/public/{bucket}/{path}";
+        return $"{url}/storage/v1/object/public/learning-data/{path}";
     }
 
     private string RemoveDiacritics(string text)
     {
         if (string.IsNullOrWhiteSpace(text)) return "unknown";
-
-        // 1. Chuyển về dạng không dấu
+        // Fix chữ Đ/đ và xóa dấu
+        text = text.Replace("Đ", "D").Replace("đ", "d");
         string normalizedString = text.Normalize(System.Text.NormalizationForm.FormD);
         System.Text.StringBuilder sb = new System.Text.StringBuilder();
-
         foreach (char c in normalizedString)
         {
-            System.Globalization.UnicodeCategory unicodeCategory = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c);
-            if (unicodeCategory != System.Globalization.UnicodeCategory.NonSpacingMark)
+            if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark)
             {
-                // 2. Chỉ giữ lại chữ cái và con số, biến tất cả ký tự lạ/dấu chấm/khoảng trắng thành '_'
-                if (char.IsLetterOrDigit(c))
-                {
-                    sb.Append(c);
-                }
-                else
-                {
-                    sb.Append('_');
-                }
+                if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) sb.Append(c);
+                else sb.Append('_');
             }
         }
-
-        // 3. Loại bỏ việc có nhiều dấu gạch dưới liên tiếp và trả về chuỗi sạch
-        string result = sb.ToString().Normalize(System.Text.NormalizationForm.FormC);
-        return System.Text.RegularExpressions.Regex.Replace(result, @"_+", "_").Trim('_');
+        return System.Text.RegularExpressions.Regex.Replace(sb.ToString(), @"_+", "_").Trim('_');
     }
 }
