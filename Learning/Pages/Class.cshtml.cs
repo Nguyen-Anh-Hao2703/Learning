@@ -68,23 +68,33 @@ public class ClassModel : PageModel
             {
                 if (file.Length > 0)
                 {
-                    // 1. Tách đuôi và làm sạch tên
-                    string extension = Path.GetExtension(file.FileName);
+                    // 1. Xử lý tên file cực sạch
+                    string extension = Path.GetExtension(file.FileName).ToLower();
                     string fileNameOnly = Path.GetFileNameWithoutExtension(file.FileName);
+
+                    // Chỉ giữ lại chữ cái và số cho tên file
                     string safeFileName = RemoveDiacritics(fileNameOnly) + extension;
 
-                    // 2. Tạo đường dẫn sạch (đã có 7_9)
-                    string remotePath = $"{RemoveDiacritics(sName)}/{RemoveDiacritics(cName)}/{RemoveDiacritics(subID)}/{RemoveDiacritics(tID)}/{safeFileName}";
+                    // 2. ÉP BUỘC làm sạch từng thành phần đường dẫn một lần nữa
+                    string s = RemoveDiacritics(sName);
+                    string c = RemoveDiacritics(cName);
+                    string sub = RemoveDiacritics(subID);
+                    string t = RemoveDiacritics(tID);
+
+                    // 3. Ghép đường dẫn: Đảm bảo không có dấu chấm dư thừa
+                    string remotePath = $"{s}/{c}/{sub}/{t}/{safeFileName}";
 
                     using var ms = new MemoryStream();
                     await file.CopyToAsync(ms);
 
-                    // 3. FIX CHÍNH: Ép Content-Type thành application/octet-stream để Supabase không từ chối .qs
                     var options = new Supabase.Storage.FileOptions
                     {
                         Upsert = true,
-                        ContentType = "application/octet-stream" // Ép kiểu file nhị phân chung
+                        ContentType = "application/octet-stream"
                     };
+
+                    // Ghi Log ra màn hình Console của Render để kiểm tra đường dẫn thực tế
+                    Console.WriteLine($"Uploading to: {remotePath}");
 
                     await client.Storage.From("learning-data").Upload(ms.ToArray(), remotePath, options);
                 }
