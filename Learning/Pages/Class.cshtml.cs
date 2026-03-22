@@ -68,35 +68,45 @@ public class ClassModel : PageModel
             {
                 if (file.Length > 0)
                 {
-                    // Tách phần tên và phần đuôi
-                    string extension = Path.GetExtension(file.FileName); // Lấy ".qs"
-                    string fileNameOnly = Path.GetFileNameWithoutExtension(file.FileName); // Lấy "Tên file"
-
-                    // Chỉ làm sạch phần tên, sau đó ghép lại với đuôi gốc
+                    // 1. Tách đuôi và làm sạch tên
+                    string extension = Path.GetExtension(file.FileName);
+                    string fileNameOnly = Path.GetFileNameWithoutExtension(file.FileName);
                     string safeFileName = RemoveDiacritics(fileNameOnly) + extension;
 
+                    // 2. Tạo đường dẫn sạch (đã có 7_9)
                     string remotePath = $"{RemoveDiacritics(sName)}/{RemoveDiacritics(cName)}/{RemoveDiacritics(subID)}/{RemoveDiacritics(tID)}/{safeFileName}";
 
                     using var ms = new MemoryStream();
                     await file.CopyToAsync(ms);
 
-                    await client.Storage.From("learning-data").Upload(ms.ToArray(), remotePath, new Supabase.Storage.FileOptions { Upsert = true });
+                    // 3. FIX CHÍNH: Ép Content-Type thành application/octet-stream để Supabase không từ chối .qs
+                    var options = new Supabase.Storage.FileOptions
+                    {
+                        Upsert = true,
+                        ContentType = "application/octet-stream" // Ép kiểu file nhị phân chung
+                    };
+
+                    await client.Storage.From("learning-data").Upload(ms.ToArray(), remotePath, options);
                 }
             }
         }
         catch (Exception ex)
         {
-            TempData["Error"] = "Lỗi: " + ex.Message;
+            TempData["Error"] = "Lỗi upload: " + ex.Message;
+            Console.WriteLine("Chi tiết lỗi: " + ex.StackTrace);
         }
 
         return RedirectToPage(new { sName, cName, subID, tID });
     }
 
     // Hàm sinh URL tải file trực tiếp từ mây Supabase
+    // Hàm sinh URL tải file: Giữ nguyên fileName vì nó đã sạch sẵn rồi
     public string GetFileUrl(string fileName)
     {
         var url = _configuration["Supabase:Url"];
         string bucket = "learning-data";
+
+        // Chỉ làm sạch các thư mục cha, còn fileName thì giữ nguyên để bảo vệ dấu chấm của đuôi file
         string path = $"{RemoveDiacritics(sName)}/{RemoveDiacritics(cName)}/{RemoveDiacritics(subID)}/{RemoveDiacritics(tID)}/{fileName}";
 
         return $"{url}/storage/v1/object/public/{bucket}/{path}";
