@@ -110,6 +110,8 @@ public class ClassModel : PageModel
         if (string.IsNullOrWhiteSpace(text)) return "unknown";
         // Fix chữ Đ/đ và xóa dấu
         text = text.Replace("Đ", "D").Replace("đ", "d");
+        text = text.Replace("Ô", "O").Replace("ô", "o");
+        text = text.Replace("Ơ", "O").Replace("ơ", "o");
         string normalizedString = text.Normalize(System.Text.NormalizationForm.FormD);
         System.Text.StringBuilder sb = new System.Text.StringBuilder();
         foreach (char c in normalizedString)
