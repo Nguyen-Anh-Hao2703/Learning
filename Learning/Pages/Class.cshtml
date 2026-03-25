@@ -35,7 +35,7 @@
 
                 <div class="input-group">
                     <input type="file" name="UploadFiles" class="form-control"
-                           accept=".qs, .slq, .pdf, .docx, .pptx, .mp4, .zip, .mp3, .jpg, .png" required multiple />
+                           accept=".qs, .pdf, .docx, .pptx, .txt, .mp4, .zip, .mp3, .jpg, .png" required multiple />
                     <button type="submit" class="btn btn-primary px-4">Tải lên</button>
                 </div>
                 <div class="mt-2">
@@ -79,6 +79,9 @@
                         <div>
                             <a href="@Model.GetFileUrl(file)" target="_blank" download="@file" class="btn btn-success btn-sm px-3 shadow-sm">
                                 📥 Tải xuống
+                            </a>
+                            <a asp-page="/Test" asp-route-path="@Model.GetFileUrl(file)" asp-route-index="0" class="btn btn-primary">
+                                📚 Làm bài tập
                             </a>
                         </div>
                     </div>

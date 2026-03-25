@@ -1,3 +1,4 @@
+using Supabase;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -12,9 +13,6 @@ internal class Program
 
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
-        builder.Services.AddRazorPages();
-
         // Thay đoạn UseSqlServer cũ bằng đoạn này
         // 1. Cấu hình Database PostgreSQL
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -22,7 +20,12 @@ internal class Program
             npgsqlOptions => {
                 npgsqlOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null); // Tự động thử lại nếu nghẽn mạng
             }));
+        var supabaseUrl = builder.Configuration["Supabase:Url"];
+        var supabaseKey = builder.Configuration["Supabase:Key"];
 
+        // 3. Đăng ký Supabase Client làm "Singleton" để dùng chung cho toàn bộ ứng dụng
+        builder.Services.AddSingleton(provider =>
+    new Supabase.Client(supabaseUrl, supabaseKey));
         // 2. Thêm Identity chuẩn (Dùng ApplicationUser để có FullName, Class, School)
         builder.Services.AddDefaultIdentity<User>(options =>
         {

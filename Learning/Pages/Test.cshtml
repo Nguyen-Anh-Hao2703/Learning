@@ -1,0 +1,33 @@
+﻿@page "{path}/{index:int}/{point:int?}"
+@model Learning.Pages.TestModel
+@{
+    ViewData["Title"] = "Làm bài tập/kiểm tra";
+}
+<div id="question-container">
+   <p>
+       @Model.Content_Test
+        <img src="data:image/png;base64,@Model.Picture"
+             style="max-width: 100%; height: auto;"
+             alt="Ảnh câu hỏi" />
+   </p>
+    <div id="answers-list">
+        <input type="hidden" name="currentIndex" value="@Model.currentIndex" />
+        <input type="radio" asp-for="SelectedAnswer" id="A" value="A">
+        <label for="A">@Model.Answer_A</label><br>
+
+        <input type="radio" asp-for="SelectedAnswer" id="B" value="B">
+        <label for="B">@Model.Answer_B</label>
+        <input type="radio" asp-for="SelectedAnswer" id="C" value="C">
+        <label for="C">@Model.Answer_C</label><br>
+
+        <input type="radio" asp-for="SelectedAnswer" id="D" value="D">
+        <label for="D">@Model.Answer_D</label>
+    </div>
+    <form method="post" asp-page-handler="Choice">
+        <input type="hidden" name="currentIndex" value="@Model.currentIndex" />
+        <input type="hidden" name="currentPoint" value="@Model.currentPoint" />
+        <a asp-page="/Test" asp-route-path="@Model.url" asp-route-index="@(Model.currentIndex + 1)">
+            <button type="submit" class="btn btn-primary mt-3">Câu tiếp theo</button>
+        </a>
+    </form>
+</div>
