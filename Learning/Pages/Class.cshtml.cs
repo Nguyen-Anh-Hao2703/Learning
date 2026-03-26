@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Identity;
 using Supabase;
+using System.IO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Learning.Models;
+using Learning.Pages;
 
 public class ClassModel : PageModel
 {

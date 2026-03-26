@@ -77,12 +77,31 @@
                             </div>
                         </div>
                         <div>
-                            <a href="@Model.GetFileUrl(file)" target="_blank" download="@file" class="btn btn-success btn-sm px-3 shadow-sm">
-                                📥 Tải xuống
-                            </a>
-                            <a asp-page="/Test" asp-route-path="@Model.GetFileUrl(file)" asp-route-index="0" class="btn btn-primary">
-                                📚 Làm bài tập
-                            </a>
+                            <div>
+                                <a href="@Model.GetFileUrl(file)" target="_blank" download="@file" class="btn btn-success btn-sm px-3 shadow-sm">
+                                    📥 Tải xuống
+                                </a>
+
+                                @if (file.EndsWith(".qs") || file.EndsWith(".slq"))
+                                {
+                                    <a asp-page="/Test"
+                                       asp-route-path="@Model.GetFileUrl(file)"
+                                       asp-route-index="0"
+                                       class="btn btn-primary btn-sm px-3 shadow-sm">
+                                        📚 Làm bài tập
+                                    </a>
+                                }
+                                else if (IsImage(file))
+                                {
+                                    <a href="@Model.GetFileUrl(file)" target="_blank" class="btn btn-warning btn-sm px-3 shadow-sm">
+                                        🖼️ Xem ảnh
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Dùng phần mềm máy tính để mở</span>
+                                }
+                            </div>
                             <a asp-page="/Dashboard"
                                asp-route-filterClass="@Model.UserClass"
                                asp-route-filterTest="@Model.GetFileUrl(file)"
@@ -115,3 +134,10 @@
         <a href="/Index" class="btn btn-outline-secondary px-4">⬅️ Quay lại</a>
     </div>
 </div>
+@functions {
+    bool IsImage(string fileName)
+    {
+        string ext = System.IO.Path.GetExtension(fileName).ToLower();
+        return new[] { ".jpg", ".png", ".jpeg", ".gif" }.Contains(ext);
+    }
+}
