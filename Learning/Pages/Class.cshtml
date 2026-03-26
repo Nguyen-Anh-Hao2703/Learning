@@ -83,6 +83,12 @@
                             <a asp-page="/Test" asp-route-path="@Model.GetFileUrl(file)" asp-route-index="0" class="btn btn-primary">
                                 📚 Làm bài tập
                             </a>
+                            <a asp-page="/Dashboard"
+                               asp-route-filterClass="@Model.UserClass"
+                               asp-route-filterTest="@Model.GetFileUrl(file)"
+                               class="btn btn-info">
+                                Xem danh sách điểm
+                            </a>
                         </div>
                     </div>
                 </div>

@@ -1,0 +1,43 @@
+﻿@page "{filterClass}/{filterTest}"
+@model DashboardModel
+@{
+    ViewData["Title"] = "Danh sách";
+}
+<div class="display-1">
+    <h2 class="text-center mb-4">DANH SÁCH ĐIỂM HỌC SINH</h2>
+    <form method="get" class="row g-3 mb-4">
+        <div class="col-md-4">
+            <input type="text" name="filterClass" value="@Model.FilterClass" class="form-control" placeholder="Lớp...">
+        </div>
+        <div class="col-md-4">
+            <input type="text" name="filterTest" value="@Model.FilterTest" class="form-control" placeholder="Tên bài tập...">
+        </div>
+        <div class="col-md-4">
+            <button type="submit" class="btn btn-primary">Lọc</button>
+        </div>
+    </form>
+    <table class="table table-striped table-hover border text-center">
+        <thead class="table-dark">
+            <tr>
+                <th>Họ và Tên</th>
+                <th>Lớp</th>
+                <th>Bài Kiểm Tra</th>
+                <th>Điểm</th>
+                <th>Ngày Làm</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in Model.ListResults)
+            {
+                <tr>
+                    <td>@item.StudentName</td>
+                    <td>@item.ClassName</td>
+                    <td>@item.TestName</td>
+                    <td class="fw-bold text-danger">@item.Point</td>
+                    <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

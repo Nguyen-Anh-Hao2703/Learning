@@ -21,6 +21,7 @@ public class ClassModel : PageModel
     [BindProperty(SupportsGet = true)] public string tID { get; set; } = "";
 
     public string CurrentUserRole { get; set; } = "";
+    public string UserClass { get; set; } = "";
     public List<string> Files { get; set; } = new List<string>();
 
     private async Task<Supabase.Client> GetSupabaseClient()
@@ -38,7 +39,7 @@ public class ClassModel : PageModel
         {
             var user = await _userManager.FindByNameAsync(User.Identity.Name);
             CurrentUserRole = user?.Role ?? "";
-
+            UserClass = user?.Class ?? "";
             try
             {
                 var client = await GetSupabaseClient();
