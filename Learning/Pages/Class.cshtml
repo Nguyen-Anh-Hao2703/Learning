@@ -84,8 +84,9 @@
 
                                 @if (file.EndsWith(".qs") || file.EndsWith(".slq"))
                                 {
-                                    <a href="/Test?path=@Model.GetFileUrl(file)&index=0" class="btn btn-primary">
-                                        📚 Làm/Xem bài tập
+                                    <a href="/Test?path=@(System.Net.WebUtility.UrlEncode(Model.GetFileUrl(file)))&index=0"
+                                       class="btn btn-primary">
+                                        📚 Làm bài tập
                                     </a>
                                 }
                                 else if (IsImage(file))
