@@ -54,6 +54,10 @@ namespace Learning.Pages
                 FullName = user.FullName;
                 studentClass = user.Class; // Lấy cột Class trực tiếp từ model User của cậu
             }
+            if (string.IsNullOrEmpty(path)) return RedirectToPage("/Index");
+
+            // GIẢI MÃ URL: Biến các ký tự %3A, %2F thành : và /
+            string decodedPath = System.Net.WebUtility.UrlDecode(path);
             currentIndex = index;
             currentPoint = point ?? 0;
             url = path; // Lấy cái link từ Supabase
@@ -62,10 +66,10 @@ namespace Learning.Pages
             int totalQuestions = listQuestions.Length;
             if(extension == ".qs")
             {
-                if (string.IsNullOrEmpty(path)) return RedirectToPage();
+                if (string.IsNullOrEmpty(decodedPath)) return RedirectToPage();
 
                 // 1. Tải file từ URL về bộ nhớ đệm (Byte Array)
-                byte[] fileData = await _httpClient.GetByteArrayAsync(path);
+                byte[] fileData = await _httpClient.GetByteArrayAsync(decodedPath);
 
                 // 2. Mở "luồng" bộ nhớ để đọc dữ liệu
                 using (MemoryStream ms = new MemoryStream(fileData))
