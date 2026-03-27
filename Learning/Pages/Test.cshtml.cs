@@ -15,7 +15,8 @@ namespace Learning.Pages
 {
     
     public class TestModel : PageModel
-    {private readonly UserManager<User> _userManager;
+    {
+        private readonly UserManager<User> _userManager;
         [BindProperty]
         public string? SelectedAnswer { get; set; } // Biến này sẽ lưu đáp án cuối cùng
         private readonly HttpClient _httpClient = new HttpClient();
