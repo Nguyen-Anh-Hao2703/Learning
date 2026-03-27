@@ -84,11 +84,8 @@
 
                                 @if (file.EndsWith(".qs") || file.EndsWith(".slq"))
                                 {
-                                    <a asp-page="/Test"
-                                       asp-route-path="@Model.GetFileUrl(file)"
-                                       asp-route-index="0"
-                                       class="btn btn-primary btn-sm px-3 shadow-sm">
-                                        📚 Làm bài tập
+                                    <a href="/Test?path=@Model.GetFileUrl(file)&index=0" class="btn btn-primary">
+                                        📚 Làm/Xem bài tập
                                     </a>
                                 }
                                 else if (IsImage(file))
