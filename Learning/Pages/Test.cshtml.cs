@@ -131,19 +131,17 @@ namespace Learning.Pages
                 }
             }
         }
-        public async Task<IActionResult> OnPostChoiceAsync(int currentIndex)
+        public async Task<IActionResult> OnPostChoiceAsync(string path, int currentIndex, int currentPoint)
         {
-            // 1. Lưu đáp án câu hiện tại (currentIndex) vào đâu đó (Session/Database)
-            string userChoice = SelectedAnswer;
-            // Lưu tạm vào TempData để trang sau có thể lấy ra tính điểm
-            if(userChoice == current_Answer)
+            // 1. Kiểm tra đáp án (Cần lấy current_Answer từ đâu đó hoặc load lại)
+            if (SelectedAnswer == current_Answer)
             {
                 currentPoint++;
             }
 
-            // 3. Quay lại trang Get với chỉ số mới và cái link file cũ
-            // name ở đây chính là cái URL file .qs mà Hào nhận được lúc đầu
-            return RedirectToPage(new { name = Request.Query["url"], index = currentIndex++ , point = currentPoint});
+            // 2. Chuyển sang câu tiếp theo
+            // Đảm bảo tên tham số khớp với OnGet: path, index, point
+            return RedirectToPage(new { path = path, index = currentIndex + 1, point = currentPoint });
         }
     }
 }

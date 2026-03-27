@@ -1,4 +1,4 @@
-﻿@page "{path}/{index:int}/{point:int?}"
+﻿@page
 @model Learning.Pages.TestModel
 @{
     ViewData["Title"] = "Làm bài tập/kiểm tra";
@@ -6,9 +6,10 @@
 <div id="question-container">
    <p>
        @Model.Content_Test
-        <img src="data:image/png;base64,@Model.Picture"
-             style="max-width: 100%; height: auto;"
-             alt="Ảnh câu hỏi" />
+        @if (!string.IsNullOrEmpty(Model.Picture))
+        {
+            <img src="data:image/png;base64,@Model.Picture" style="max-width:100%;" />
+        }
    </p>
     <div id="answers-list">
         <input type="hidden" name="currentIndex" value="@Model.currentIndex" />
