@@ -47,82 +47,61 @@ namespace Learning.Pages
         public async Task<IActionResult> OnGet(string path, int index, int? point)
         {
             var user = await _userManager.GetUserAsync(User);
-
             if (user != null)
             {
                 currentUserName = user.UserName;
                 FullName = user.FullName;
-                studentClass = user.Class; // Lấy cột Class trực tiếp từ model User của cậu
+                studentClass = user.Class;
             }
+
             if (string.IsNullOrEmpty(path)) return RedirectToPage("/Index");
 
-            // GIẢI MÃ URL: Biến các ký tự %3A, %2F thành : và /
             string decodedPath = System.Net.WebUtility.UrlDecode(path);
             currentIndex = index;
             currentPoint = point ?? 0;
-            url = path; // Lấy cái link từ Supabase
-            string extension = Path.GetExtension(url);
+            url = path;
+
             string[] listQuestions = Array.Empty<string>();
-            int totalQuestions = listQuestions.Length;
-            if(extension == ".qs")
+
+            if (Path.GetExtension(decodedPath).ToLower() == ".qs")
             {
-                if (string.IsNullOrEmpty(decodedPath)) return RedirectToPage();
-
-                // 1. Tải file từ URL về bộ nhớ đệm (Byte Array)
                 byte[] fileData = await _httpClient.GetByteArrayAsync(decodedPath);
-
-                // 2. Mở "luồng" bộ nhớ để đọc dữ liệu
                 using (MemoryStream ms = new MemoryStream(fileData))
+                using (ZipArchive archive = new ZipArchive(ms))
                 {
-                    // 3. Sử dụng ZipArchive để mở file .qs ngay trong RAM
-                    using (ZipArchive archive = new ZipArchive(ms))
+                    ZipArchiveEntry? nameFileEntry = archive.GetEntry("name.txt");
+                    if (nameFileEntry != null)
                     {
-                        // 4. Tìm file "name.txt" bên trong file nén
-                        ZipArchiveEntry? nameFileEntry = archive.GetEntry("name.txt");
-                        if (nameFileEntry != null)
+                        using (StreamReader reader = new StreamReader(nameFileEntry.Open()))
                         {
-                            // Đọc nội dung file name.txt
-                            using (StreamReader reader = new StreamReader(nameFileEntry.Open()))
-                            {
-                                string content = await reader.ReadToEndAsync();
-                                // Cắt ra danh sách các file câu hỏi (.slq)
-                                listQuestions = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-
-                                // Giờ cậu có thể dùng listQuestions[0] để đi tải tiếp file câu hỏi rồi!
-                                Console.WriteLine("Tìm thấy " + listQuestions.Length + " câu hỏi.");
-                            }
-                        }
-                        ZipArchiveEntry? nameFileSLQ = archive.GetEntry(listQuestions[currentIndex]);
-                        if (nameFileSLQ != null)
-                        {
-                             await Load(nameFileSLQ);
+                            string content = await reader.ReadToEndAsync();
+                            listQuestions = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
                         }
                     }
-                }
-            }
-            if (currentIndex >= totalQuestions)
-            {
-                // 1. Tạo đối tượng kết quả từ model ExamResult mình vừa sửa
-                var finalResult = new ExamResult
-                {
-                    StudentName = FullName,    // Tên học sinh lấy từ Identity
-                    ClassName = studentClass,  // Lớp lấy từ Identity
-                    TestName = path,           // Tên file bài tập (.qs)
-                    Point = currentPoint       // Số điểm vừa tính được
-                };
 
-                try
-                {
-                    // 2. Lệnh Insert thần thánh vào Supabase
-                    await _supabase.From<ExamResult>().Insert(finalResult);
+                    // Cập nhật totalQuestions Ở ĐÂY sau khi đã đọc xong file
+                    int totalQuestions = listQuestions.Length;
 
-                    // 3. Xong thì cho các em sang trang chúc mừng
-                    return RedirectToPage("/Result", new { score = currentPoint });
-                }
-                catch (Exception ex)
-                {
-                    // Nếu có lỗi (ví dụ chưa tạo bảng trên web), nó sẽ hiện ở đây
-                    Console.WriteLine("Lỗi lưu điểm: " + ex.Message);
+                    // KIỂM TRA: Đã hết câu hỏi chưa?
+                    if (currentIndex >= totalQuestions && totalQuestions > 0)
+                    {
+                        var finalResult = new ExamResult
+                        {
+                            StudentName = FullName,
+                            ClassName = studentClass,
+                            TestName = decodedPath, // Dùng link đã giải mã cho đẹp
+                            Point = currentPoint
+                        };
+                        await _supabase.From<ExamResult>().Insert(finalResult);
+                        return RedirectToPage("/Result", new { score = currentPoint });
+                    }
+
+                    // Nếu còn câu hỏi, load câu hỏi hiện tại
+                    if (currentIndex < totalQuestions)
+                    {
+                        ZipArchiveEntry? nameFileSLQ = archive.GetEntry(listQuestions[currentIndex]);
+                        if (nameFileSLQ != null) await Load(nameFileSLQ);
+                    }
                 }
             }
             return Page();
