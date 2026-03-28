@@ -133,14 +133,43 @@ namespace Learning.Pages
         }
         public async Task<IActionResult> OnPostChoiceAsync(string path, int currentIndex, int currentPoint)
         {
-            // 1. Kiểm tra đáp án (Cần lấy current_Answer từ đâu đó hoặc load lại)
-            if (SelectedAnswer == current_Answer)
+            if (string.IsNullOrEmpty(path)) return RedirectToPage("/Index");
+
+            // 1. Tải lại file để lấy đáp án đúng (Vì HTTP là không trạng thái)
+            string decodedPath = System.Net.WebUtility.UrlDecode(path);
+            byte[] fileData = await _httpClient.GetByteArrayAsync(decodedPath);
+            using (MemoryStream ms = new MemoryStream(fileData))
+            using (ZipArchive archive = new ZipArchive(ms))
             {
-                currentPoint++;
+                ZipArchiveEntry? nameFileEntry = archive.GetEntry("name.txt");
+                if (nameFileEntry != null)
+                {
+                    using (StreamReader reader = new StreamReader(nameFileEntry.Open()))
+                    {
+                        string content = await reader.ReadToEndAsync();
+                        var listQuestions = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+                        // Lấy file câu hỏi hiện tại để so đáp án
+                        ZipArchiveEntry? currentQS = archive.GetEntry(listQuestions[currentIndex]);
+                        if (currentQS != null)
+                        {
+                            using (StreamReader qsReader = new StreamReader(currentQS.Open()))
+                            {
+                                string qsContent = await qsReader.ReadToEndAsync();
+                                var lines = qsContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                                string correctAnswer = lines[6]; // Đáp án đúng nằm ở dòng 7
+
+                                if (SelectedAnswer == correctAnswer)
+                                {
+                                    currentPoint++;
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             // 2. Chuyển sang câu tiếp theo
-            // Đảm bảo tên tham số khớp với OnGet: path, index, point
             return RedirectToPage(new { path = path, index = currentIndex + 1, point = currentPoint });
         }
     }
