@@ -12,13 +12,13 @@ namespace Learning.Models // Đảm bảo có namespace để bên trang Test g�
         public int Id { get; set; }
 
         [Column("student_name")]
-        public string StudentName { get; set; }
+        public string? StudentName { get; set; }
 
         [Column("class_name")]
-        public string ClassName { get; set; }
+        public string? ClassName { get; set; }
 
         [Column("test_name")]
-        public string TestName { get; set; }
+        public string? TestName { get; set; }
 
         [Column("point")]
         public int Point { get; set; }

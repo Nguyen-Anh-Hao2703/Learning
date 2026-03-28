@@ -18,13 +18,13 @@ namespace Learning.Pages
         {
             _userManager = userManager;
         }
-        public async Task OnGetAsync(int score) // Đổi thành Task và OnGetAsync
+        public async Task OnGetAsync(int score) // Đổi từ void sang Task
         {
             var user = await _userManager.GetUserAsync(User);
             if (user != null)
             {
-                UserName = user.FullName;
-                Class = user.Class!;
+                UserName = user.FullName ?? "N/A";
+                Class = user.Class ?? "N/A";
             }
             point = score;
         }

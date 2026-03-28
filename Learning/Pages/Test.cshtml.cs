@@ -50,9 +50,9 @@ namespace Learning.Pages
             var user = await _userManager.GetUserAsync(User);
             if (user != null)
             {
-                currentUserName = user.UserName;
-                FullName = user.FullName;
-                studentClass = user.Class;
+                currentUserName = user.UserName ?? "Tài khoản không xác định";
+                FullName = user.FullName ?? "Học sinh ẩn danh";
+                studentClass = user.Class ?? "Không rõ lớp";
             }
 
             if (string.IsNullOrEmpty(path)) return RedirectToPage("/Index");
@@ -86,15 +86,16 @@ namespace Learning.Pages
                     // KIỂM TRA: Đã hết câu hỏi chưa?
                     if (currentIndex >= totalQuestions && totalQuestions > 0)
                     {
+                        // Đảm bảo lấy lại thông tin user trước khi insert
+                        user = await _userManager.GetUserAsync(User);
                         var finalResult = new ExamResult
                         {
-                            StudentName = FullName,
-                            ClassName = studentClass,
-                            TestName = decodedPath, // Dùng link đã giải mã cho đẹp
+                            StudentName = user?.FullName ?? "Học sinh ẩn danh", // Không được để null
+                            ClassName = user?.Class ?? "Không rõ lớp",
+                            TestName = Path.GetFileName(decodedPath), // Chỉ lấy tên file cho ngắn gọn
                             Point = currentPoint
                         };
                         await _supabase.From<ExamResult>().Insert(finalResult);
-                        return RedirectToPage("/Result", new { score = currentPoint });
                     }
 
                     // Nếu còn câu hỏi, load câu hỏi hiện tại
