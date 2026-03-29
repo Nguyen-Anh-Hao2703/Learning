@@ -100,12 +100,16 @@
                                     <span class="badge bg-secondary">Dùng phần mềm máy tính để mở</span>
                                 }
                             </div>
-                            <a asp-page="/Dashboard"
-                               asp-route-filterClass="@Model.UserClass"
-                               asp-route-filterTest="@Model.GetFileUrl(file)"
-                               class="btn btn-info">
-                                Xem danh sách điểm
-                            </a>
+
+                            @if (Model.CurrentUserRole == "Teacher")
+                            {
+                                <a asp-page="/Dashboard"
+                                asp-route-filterClass="@Model.UserClass"
+                                asp-route-filterTest="@Model.GetFileUrl(file)"
+                                class="btn btn-info">
+                                    Xem danh sách điểm
+                                </a>
+                            }
                         </div>
                     </div>
                 </div>
