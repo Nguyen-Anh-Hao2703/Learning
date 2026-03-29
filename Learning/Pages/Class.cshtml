@@ -81,7 +81,6 @@
                                 <a href="@Model.GetFileUrl(file)" target="_blank" download="@file" class="btn btn-success btn-sm px-3 shadow-sm">
                                     📥 Tải xuống
                                 </a>
-
                                 @if (file.EndsWith(".qs") || file.EndsWith(".slq"))
                                 {
                                     <a href="/Test?path=@(System.Net.WebUtility.UrlEncode(Model.GetFileUrl(file)))&index=0"
@@ -99,17 +98,18 @@
                                 {
                                     <span class="badge bg-secondary">Dùng phần mềm máy tính để mở</span>
                                 }
+                                @if (Model.CurrentUserRole == "Teacher")
+                                {
+                                    <a asp-page="/Dashboard"
+                                    asp-route-filterClass="@Model.UserClass"
+                                    asp-route-filterTest="@Model.GetFileUrl(file)"
+                                    class="btn btn-info">
+                                        Xem danh sách điểm
+                                    </a>
+                                }
                             </div>
 
-                            @if (Model.CurrentUserRole == "Teacher")
-                            {
-                                <a asp-page="/Dashboard"
-                                asp-route-filterClass="@Model.UserClass"
-                                asp-route-filterTest="@Model.GetFileUrl(file)"
-                                class="btn btn-info">
-                                    Xem danh sách điểm
-                                </a>
-                            }
+                            
                         </div>
                     </div>
                 </div>
