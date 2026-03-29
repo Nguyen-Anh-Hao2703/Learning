@@ -16,28 +16,38 @@
             <button type="submit" class="btn btn-primary">Lọc</button>
         </div>
     </form>
-    <table class="table table-striped table-hover border text-center">
-        <thead class="table-dark">
-            <tr>
-                <th>Họ và Tên</th>
-                <th>Lớp</th>
-                <th>Bài Kiểm Tra</th>
-                <th>Điểm</th>
-                <th>Ngày Làm</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            @foreach (var item in Model.ListResults)
-            {
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped text-center">
+            <thead class="table-dark">
                 <tr>
-                    <td>@item.StudentName</td>
-                    <td>@item.ClassName</td>
-                    <td>@item.TestName</td>
-                    <td>@item.Point</td>
-                    <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                    <th style="width: 25%;">Họ và Tên</th>
+                    <th style="width: 15%;">Lớp</th>
+                    <th style="width: 30%;">Bài Kiểm Tra</th>
+                    <th style="width: 15%;">Điểm</th>
+                    <th style="width: 15%;">Ngày Làm</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @if (Model.ListResults != null && Model.ListResults.Any())
+                {
+                    foreach (var item in Model.ListResults)
+                    {
+                        <tr>
+                            <td class="align-middle">@item.StudentName</td>
+                            <td class="align-middle">@item.ClassName</td>
+                            <td class="align-middle">@item.TestName</td>
+                            <td class="align-middle fw-bold text-primary">@item.Point</td>
+                            <td class="align-middle">@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-muted">Không tìm thấy dữ liệu kết quả nào.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>

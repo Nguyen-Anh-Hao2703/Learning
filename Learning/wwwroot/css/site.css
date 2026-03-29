@@ -29,3 +29,17 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+/* Khống chế kích thước chữ cho bảng Dashboard */
+table {
+    font-size: 16px !important; /* Kích thước chuẩn */
+}
+
+thead th {
+    font-size: 18px !important;
+    font-weight: bold;
+    white-space: nowrap; /* Không cho chữ tiêu đề xuống dòng */
+}
+
+td {
+    word-break: break-word; /* Nếu tên bài kiểm tra quá dài thì tự xuống dòng */
+}
