@@ -21,28 +21,21 @@ public class DashboardModel : PageModel
 
     public async Task OnGetAsync(string filterClass, string filterTest)
     {
-        FilterClass = filterClass;
-        FilterTest = filterTest;
-
-        // 1. Khởi tạo query ban đầu
         var query = _supabase.From<ExamResult>();
 
-        // 2. Kiểm tra và nối điều kiện (Không dùng dấu =)
-        if (!string.IsNullOrEmpty(FilterClass))
+        if (!string.IsNullOrEmpty(filterClass))
         {
-            query.Where(x => x.ClassName == FilterClass);
+            query.Where(x => x.ClassName == filterClass);
         }
 
-        if (!string.IsNullOrEmpty(FilterTest))
+        if (!string.IsNullOrEmpty(filterTest))
         {
-            query.Where(x => x.TestName == FilterTest);
+            // Mẹo: Nếu filterTest là một URL, ta chỉ lấy phần tên file cuối cùng
+            string fileName = Path.GetFileName(System.Net.WebUtility.UrlDecode(filterTest));
+            query.Where(x => x.TestName == fileName);
         }
 
-        // 3. Thực thi lấy dữ liệu
-        var response = await query
-            .Order(x => x.Point, Supabase.Postgrest.Constants.Ordering.Descending)
-            .Get();
-
-        ListResults = response.Models;
+        var result = await query.Get();
+        ListResults = result.Models; // Gán danh sách kết quả vào biến hiển thị
     }
 }
