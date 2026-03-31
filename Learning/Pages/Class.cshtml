@@ -106,10 +106,11 @@
                                     class="btn btn-info">
                                         Xem danh sách điểm
                                     </a>
+                                    <form method="post" asp-page-handler="DeleteFile" asp-route-file="file">
+                                        <button type="submit" class="btn btn-outline-danger" aria-label="❌Xóa bài tập">❌Xóa bài tập</button>
+                                    </form>
                                 }
-                                <form method="post" asp-page-handler="DeleteFile" asp-route-file="file">
-                                    <button type="submit" class="btn btn-outline-danger" aria-label="❌Xóa bài tập">❌Xóa bài tập</button>
-                                </form>
+                                
                             </div>
                         </div>
                     </div>
