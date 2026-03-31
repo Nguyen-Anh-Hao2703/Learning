@@ -8,6 +8,7 @@ using Learning.Pages;
 
 public class ClassModel : PageModel
 {
+    private readonly Supabase.Client _supabase;
     private readonly UserManager<User> _userManager;
     private readonly IConfiguration _configuration;
 
@@ -106,6 +107,28 @@ public class ClassModel : PageModel
         var url = _configuration["Supabase:Url"];
         string path = $"{RemoveDiacritics(sName)}/{RemoveDiacritics(cName)}/{RemoveDiacritics(subID)}/{RemoveDiacritics(tID)}/{fileName}";
         return $"{url}/storage/v1/object/public/learning-data/{path}";
+    }
+    public async Task<IActionResult> OnPostDeletedFile(string file)
+    {
+        if (string.IsNullOrEmpty(file)) return RedirectToPage();
+
+        try
+        {
+            // 1. Tạo đường dẫn tương đối để xóa (giống như cách cậu GetFileUrl)
+            string path = $"{RemoveDiacritics(sName)}/{RemoveDiacritics(cName)}/{RemoveDiacritics(subID)}/{file}";
+
+            // 2. Gọi lệnh xóa từ Storage
+            await _supabase.Storage
+                .From("learning-data")
+                .Remove(new List<string> { path });
+
+            TempData["Message"] = "Đã xóa file thành công!";
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = "Không thể xóa: " + ex.Message;
+        }
+        return RedirectToPage();
     }
 
     private string RemoveDiacritics(string text)

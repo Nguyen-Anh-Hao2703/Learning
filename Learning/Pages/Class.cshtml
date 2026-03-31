@@ -98,6 +98,9 @@
                                 {
                                     <span class="badge bg-secondary">Dùng phần mềm máy tính để mở</span>
                                 }
+                                <form method="post" asp-page-handler="DeleteFile" asp-route-file="file">
+                                    <button type="submit" class="btn-close" aria-label="❌Xóa bài tập"></button>
+                                </form>
                                 @if (Model.CurrentUserRole == "Teacher")
                                 {
                                     <a asp-page="/Dashboard"
