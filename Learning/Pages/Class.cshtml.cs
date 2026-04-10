@@ -12,10 +12,11 @@ public class ClassModel : PageModel
     private readonly UserManager<User> _userManager;
     private readonly IConfiguration _configuration;
 
-    public ClassModel(UserManager<User> userManager, IConfiguration configuration)
+    public ClassModel(UserManager<User> userManager, IConfiguration configuration, Supabase.Client supabase)
     {
         _userManager = userManager;
         _configuration = configuration;
+        _supabase = supabase; // Phải gán giá trị này thì mới dùng được ở hàm Xóa!
     }
 
     [BindProperty(SupportsGet = true)] public string sName { get; set; } = "";
@@ -110,27 +111,30 @@ public class ClassModel : PageModel
     }
     public async Task<IActionResult> OnPostDeletedFileAsync(string file)
     {
-        if (string.IsNullOrEmpty(file)) return RedirectToPage();
+        if (string.IsNullOrEmpty(file)) return RedirectToPage(new { sName, cName, subID, tID });
 
         try
         {
-            // 1. Tạo đường dẫn chính xác đến file trong Bucket
-            string path = $"{RemoveDiacritics(sName)}/{RemoveDiacritics(cName)}/{RemoveDiacritics(subID)}/{file}";
+            // 1. Dùng GetSupabaseClient() để đảm bảo client đã sẵn sàng nếu _supabase chưa inject
+            var client = await GetSupabaseClient();
 
-            // 2. Gửi lệnh xóa trực tiếp lên Supabase
-            var response = await _supabase.Storage
+            // 2. Đường dẫn PHẢI khớp tuyệt đối với cấu trúc lúc upload
+            string path = $"{RemoveDiacritics(sName)}/{RemoveDiacritics(cName)}/{RemoveDiacritics(subID)}/{RemoveDiacritics(tID)}/{file}";
+
+            // 3. Thực hiện xóa
+            await client.Storage
                 .From("learning-data")
                 .Remove(new List<string> { path });
 
-            // Nếu xóa thành công, Supabase sẽ trả về danh sách file đã xóa
+            TempData["Message"] = "Đã xóa file vĩnh viễn!";
         }
         catch (Exception ex)
         {
             TempData["Error"] = "Lỗi hệ thống: " + ex.Message;
         }
 
-        // 3. Load lại trang, lúc này file đã mất thật sự nên sẽ không hiện lại nữa
-        return RedirectToPage();
+        // 4. Quan trọng: Phải truyền lại tham số để quay về đúng thư mục bài tập
+        return RedirectToPage(new { sName, cName, subID, tID });
     }
 
     private string RemoveDiacritics(string text)

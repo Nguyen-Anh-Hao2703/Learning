@@ -3,7 +3,14 @@
 @{
     ViewData["Title"] = "Chi tiết lớp học";
 }
-
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
 <div class="container mt-4">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb shadow-sm p-2 bg-light rounded">
