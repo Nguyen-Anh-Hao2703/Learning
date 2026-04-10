@@ -108,26 +108,28 @@ public class ClassModel : PageModel
         string path = $"{RemoveDiacritics(sName)}/{RemoveDiacritics(cName)}/{RemoveDiacritics(subID)}/{RemoveDiacritics(tID)}/{fileName}";
         return $"{url}/storage/v1/object/public/learning-data/{path}";
     }
-    public async Task<IActionResult> OnPostDeletedFile(string file)
+    public async Task<IActionResult> OnPostDeletedFileAsync(string file)
     {
         if (string.IsNullOrEmpty(file)) return RedirectToPage();
 
         try
         {
-            // 1. Tạo đường dẫn tương đối để xóa (giống như cách cậu GetFileUrl)
+            // 1. Tạo đường dẫn chính xác đến file trong Bucket
             string path = $"{RemoveDiacritics(sName)}/{RemoveDiacritics(cName)}/{RemoveDiacritics(subID)}/{file}";
 
-            // 2. Gọi lệnh xóa từ Storage
-            await _supabase.Storage
+            // 2. Gửi lệnh xóa trực tiếp lên Supabase
+            var response = await _supabase.Storage
                 .From("learning-data")
                 .Remove(new List<string> { path });
 
-            TempData["Message"] = "Đã xóa file thành công!";
+            // Nếu xóa thành công, Supabase sẽ trả về danh sách file đã xóa
         }
         catch (Exception ex)
         {
-            TempData["Error"] = "Không thể xóa: " + ex.Message;
+            TempData["Error"] = "Lỗi hệ thống: " + ex.Message;
         }
+
+        // 3. Load lại trang, lúc này file đã mất thật sự nên sẽ không hiện lại nữa
         return RedirectToPage();
     }
 

@@ -106,8 +106,10 @@
                                     class="btn btn-info">
                                         Xem danh sách điểm
                                     </a>
-                                    <form method="post" asp-page-handler="DeleteFile" asp-route-file="file">
-                                        <button type="submit" class="btn btn-outline-danger" aria-label="❌Xóa bài tập">❌Xóa bài tập</button>
+                                    <form method="post" asp-page-handler="DeletedFile" asp-route-file="@file">
+                                        <button type="submit" class="btn btn-danger btn-sm shadow-sm" onclick="return confirm('Xóa vĩnh viễn bài này?')">
+                                            Xóa vĩnh viễn
+                                        </button>
                                     </form>
                                 }
                                 
