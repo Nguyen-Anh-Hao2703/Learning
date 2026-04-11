@@ -12,11 +12,12 @@ public class ClassModel : PageModel
     private readonly UserManager<User> _userManager;
     private readonly IConfiguration _configuration;
 
+    // Thêm Supabase.Client vào đây
     public ClassModel(UserManager<User> userManager, IConfiguration configuration, Supabase.Client supabase)
     {
         _userManager = userManager;
         _configuration = configuration;
-        _supabase = supabase; // Phải gán giá trị này thì mới dùng được ở hàm Xóa!
+        _supabase = supabase; // Bắt buộc phải có dòng này!
     }
 
     [BindProperty(SupportsGet = true)] public string sName { get; set; } = "";
@@ -28,32 +29,22 @@ public class ClassModel : PageModel
     public string UserClass { get; set; } = "";
     public List<string> Files { get; set; } = new List<string>();
 
-    private async Task<Supabase.Client> GetSupabaseClient()
-    {
-        var url = _configuration["Supabase:Url"];
-        var key = _configuration["Supabase:Key"];
-        var client = new Supabase.Client(url, key);
-        await client.InitializeAsync();
-        return client;
-    }
-
     public async Task OnGetAsync()
     {
         if (User.Identity != null && User.Identity.IsAuthenticated)
         {
-            var user = await _userManager.FindByNameAsync(User.Identity.Name);
+            var user = await _userManager.FindByNameAsync(User.Identity.Name!);
             CurrentUserRole = user?.Role ?? "";
             UserClass = user?.Class ?? "";
             try
             {
-                var client = await GetSupabaseClient();
                 // Làm sạch đường dẫn trước khi List file
                 string path = $"{RemoveDiacritics(sName)}/{RemoveDiacritics(cName)}/{RemoveDiacritics(subID)}/{RemoveDiacritics(tID)}";
 
-                var result = await client.Storage.From("learning-data").List(path);
+                var result = await _supabase.Storage.From("learning-data").List(path);
                 if (result != null)
                 {
-                    Files = result.Select(x => x.Name)
+                    Files = result.Select(x => x.Name!)
                                   .Where(n => n != ".emptyFolderPlaceholder" && n != "info.txt" && !string.IsNullOrEmpty(n))
                                   .ToList();
                 }
@@ -68,7 +59,6 @@ public class ClassModel : PageModel
 
         try
         {
-            var client = await GetSupabaseClient();
             foreach (var file in UploadFiles)
             {
                 if (file.Length > 0)
@@ -91,7 +81,7 @@ public class ClassModel : PageModel
                         ContentType = "application/octet-stream"
                     };
 
-                    await client.Storage.From("learning-data").Upload(ms.ToArray(), remotePath, options);
+                    await _supabase.Storage.From("learning-data").Upload(ms.ToArray(), remotePath, options);
                 }
             }
         }
@@ -115,25 +105,17 @@ public class ClassModel : PageModel
 
         try
         {
-            // 1. Dùng GetSupabaseClient() để đảm bảo client đã sẵn sàng nếu _supabase chưa inject
-            var client = await GetSupabaseClient();
-
-            // 2. Đường dẫn PHẢI khớp tuyệt đối với cấu trúc lúc upload
+            // Đường dẫn xóa phải có tID giống như lúc OnGet lấy file
             string path = $"{RemoveDiacritics(sName)}/{RemoveDiacritics(cName)}/{RemoveDiacritics(subID)}/{RemoveDiacritics(tID)}/{file}";
 
-            // 3. Thực hiện xóa
-            await client.Storage
-                .From("learning-data")
-                .Remove(new List<string> { path });
-
-            TempData["Message"] = "Đã xóa file vĩnh viễn!";
+            await _supabase.Storage.From("learning-data").Remove(new List<string> { path });
+            TempData["Message"] = "Đã xóa vĩnh viễn!";
         }
         catch (Exception ex)
         {
-            TempData["Error"] = "Lỗi hệ thống: " + ex.Message;
+            TempData["Error"] = "Lỗi: " + ex.Message;
         }
 
-        // 4. Quan trọng: Phải truyền lại tham số để quay về đúng thư mục bài tập
         return RedirectToPage(new { sName, cName, subID, tID });
     }
 

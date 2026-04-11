@@ -25,7 +25,7 @@ internal class Program
 
         // 3. Đăng ký Supabase Client làm "Singleton" để dùng chung cho toàn bộ ứng dụng
         builder.Services.AddSingleton(provider =>
-    new Supabase.Client(supabaseUrl, supabaseKey));
+            new Supabase.Client(supabaseUrl!, supabaseKey));
         // 2. Thêm Identity chuẩn (Dùng ApplicationUser để có FullName, Class, School)
         builder.Services.AddDefaultIdentity<User>(options =>
         {
@@ -36,7 +36,6 @@ internal class Program
             options.Password.RequireUppercase = false;
         })
         .AddEntityFrameworkStores<ApplicationDbContext>();
-
         builder.Services.AddRazorPages();
 
         var app = builder.Build();

@@ -14,7 +14,9 @@ namespace Learning.Pages
         public int point;
         public string UserName;
         public string Class;
+        #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
         public ResultModel(UserManager<User> userManager)
+        #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
         {
             _userManager = userManager;
         }

@@ -96,10 +96,11 @@ namespace Learning.Pages
                             Point = currentPoint
                         };
                         await _supabase.From<ExamResult>().Insert(finalResult);
+                        return RedirectToPage("/Result", new {point = currentPoint });
                     }
 
                     // Nếu còn câu hỏi, load câu hỏi hiện tại
-                    if (currentIndex < totalQuestions)
+                    if (currentIndex < totalQuestions && currentIndex >= 0)
                     {
                         ZipArchiveEntry? nameFileSLQ = archive.GetEntry(listQuestions[currentIndex]);
                         if (nameFileSLQ != null) await Load(nameFileSLQ);
@@ -111,7 +112,7 @@ namespace Learning.Pages
         public async Task Load(ZipArchiveEntry? nameFileSLQ)
         {
             // Tải toàn bộ nội dung file về dưới dạng chuỗi (string)
-            using (StreamReader reader = new StreamReader(nameFileSLQ.Open()))
+            using (StreamReader reader = new StreamReader(nameFileSLQ!.Open()))
             {
                 string content = await reader.ReadToEndAsync();
                 // Cắt ra danh sách các file câu hỏi (.slq)
