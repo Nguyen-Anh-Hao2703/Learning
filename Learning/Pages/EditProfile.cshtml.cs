@@ -17,9 +17,9 @@ public class EditProfileModel : PageModel
 
     public class InputModel
     {
-        public string FullName { get; set; }
-        public string Class { get; set; }
-        public string School { get; set; }
+        public string? FullName { get; set; }
+        public string? Class { get; set; }
+        public string? School { get; set; }
     }
 
     // Bước 1: Lấy dữ liệu cũ đổ vào ô nhập
@@ -43,7 +43,7 @@ public class EditProfileModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return NotFound();
 
-        user.FullName = Input.FullName;
+        user.FullName = Input.FullName!;
         user.Class = Input.Class;
         user.School = Input.School;
 

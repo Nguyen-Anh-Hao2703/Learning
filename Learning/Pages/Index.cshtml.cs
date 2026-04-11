@@ -31,7 +31,7 @@ public class IndexModel : PageModel
     {
         var url = _configuration["Supabase:Url"];
         var key = _configuration["Supabase:Key"];
-        var client = new Supabase.Client(url, key);
+        var client = new Supabase.Client(url!, key);
         await client.InitializeAsync();
         return client;
     }
@@ -40,13 +40,13 @@ public class IndexModel : PageModel
     {
         if (User.Identity?.IsAuthenticated == true)
         {
-            var user = await _userManager.FindByNameAsync(User.Identity.Name);
+            var user = await _userManager.FindByNameAsync(User.Identity.Name!);
             if (user != null)
             {
-                NameSchool = user.School;
-                NameClass = user.Class;
+                NameSchool = user.School!;
+                NameClass = user.Class!;
                 CurrentUserRole = user.Role;
-                await LoadLessons(user.School, user.Class);
+                await LoadLessons(user.School!, user.Class!);
             }
         }
     }
@@ -63,13 +63,13 @@ public class IndexModel : PageModel
             {
                 foreach (var sub in subjects)
                 {
-                    if (sub.Name.Contains(".emptyFolder")) continue;
+                    if (sub.Name!.Contains(".emptyFolder")) continue;
                     var teachers = await client.Storage.From("learning-data").List($"{path}/{sub.Name}");
                     if (teachers != null)
                     {
                         foreach (var t in teachers)
                         {
-                            if (t.Name.Contains(".emptyFolder")) continue;
+                            if (t.Name!.Contains(".emptyFolder")) continue;
                             StudentLessons.Add(new LessonInfo { Subject = sub.Name, Teacher = t.Name });
                         }
                     }
@@ -81,7 +81,7 @@ public class IndexModel : PageModel
 
     public async Task<IActionResult> OnPostCreateFolder(string SubjectID)
     {
-        var user = await _userManager.FindByNameAsync(User.Identity.Name);
+        var user = await _userManager.FindByNameAsync(User.Identity!.Name!);
         if (user == null || string.IsNullOrEmpty(SubjectID)) return RedirectToPage();
 
         try
@@ -90,7 +90,7 @@ public class IndexModel : PageModel
             var content = System.Text.Encoding.UTF8.GetBytes("init_" + DateTime.Now.Ticks);
 
             // Dùng chung hàm RemoveDiacritics để đường dẫn luôn khớp nhau
-            string path = $"{RemoveDiacritics(user.School)}/{RemoveDiacritics(user.Class)}/{RemoveDiacritics(SubjectID)}/{RemoveDiacritics(user.UserName)}/info.txt";
+            string path = $"{RemoveDiacritics(user.School!)}/{RemoveDiacritics(user.Class!)}/{RemoveDiacritics(SubjectID)}/{RemoveDiacritics(user.UserName!)}/info.txt";
 
             await client.Storage.From("learning-data").Upload(content, path, new Supabase.Storage.FileOptions { Upsert = true });
         }

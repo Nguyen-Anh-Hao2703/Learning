@@ -9,10 +9,10 @@ public class DashboardModel : PageModel
 
     // Khai báo BindProperty để giữ giá trị trên ô nhập liệu (nếu muốn)
     [BindProperty(SupportsGet = true)]
-    public string FilterClass { get; set; }
+    public string? FilterClass { get; set; }
 
     [BindProperty(SupportsGet = true)]
-    public string FilterTest { get; set; }
+    public string? FilterTest { get; set; }
 
     public DashboardModel(Supabase.Client supabase)
     {
