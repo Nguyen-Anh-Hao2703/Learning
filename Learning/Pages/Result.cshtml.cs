@@ -11,12 +11,10 @@ namespace Learning.Pages
     {
         private readonly UserManager<User> _userManager;
         private readonly HttpClient _httpClient = new HttpClient();
-        public int point;
-        public string UserName;
-        public string Class;
-        #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+        public int Point { get; set; } // Nên dùng Property để Razor dễ truy cập
+        public string UserName = string.Empty;
+        public string Class = string.Empty;
         public ResultModel(UserManager<User> userManager)
-        #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
         {
             _userManager = userManager;
         }
@@ -28,7 +26,7 @@ namespace Learning.Pages
                 UserName = user.FullName ?? "N/A";
                 Class = user.Class ?? "N/A";
             }
-            point = score;
+            Point = score;
         }
     }
 }

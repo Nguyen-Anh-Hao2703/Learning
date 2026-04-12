@@ -96,7 +96,7 @@ namespace Learning.Pages
                             Point = currentPoint
                         };
                         await _supabase.From<ExamResult>().Insert(finalResult);
-                        return RedirectToPage("/Result", new {point = currentPoint });
+                        return RedirectToPage("/Result", new { score = currentPoint });
                     }
 
                     // Nếu còn câu hỏi, load câu hỏi hiện tại
