@@ -27,7 +27,7 @@
                             <a class="nav-link text-dark" asp-area="" asp-page="/EditProfile">Chỉnh sửa hồ sơ</a>
                         </li>
                         <li class="nav-item">
-                            <form method="post" asp-page="/Index" asp-page-handler="Logout" class="form-inline">
+                            <form method="post" asp-area="Identity" asp-page="/Logout" asp-route-returnUrl="@Url.Page("/Index", new { area = "" })" class="form-inline">
                                 <button type="submit" class="nav-link btn btn-link text-dark" style="text-decoration:none;">
                                     Đăng xuất (@User.Identity!.Name)
                                 </button>
