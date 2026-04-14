@@ -27,13 +27,20 @@
                             <a class="nav-link text-dark" asp-area="" asp-page="/EditProfile">Chỉnh sửa hồ sơ</a>
                         </li>
                         <li class="nav-item">
-                            <form method="post" asp-area="Identity" asp-page="/Logout" asp-route-returnUrl="@Url.Page("/Index", new { area = "" })" class="form-inline">
-                                <button type="submit" class="nav-link btn btn-link text-dark" style="text-decoration:none;">
-                                    Đăng xuất (@User.Identity!.Name)
-                                </button>
-                            </form>
-                         </li>
-                        
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                @* 1. Thẻ link hiển thị cho người dùng *@
+                                <a class="nav-link text-dark" style="cursor:pointer;"
+                                   onclick="arguments[0].preventDefault(); document.getElementById('logout-form').submit();">
+                                   Đăng xuất (@User.Identity.Name)
+                                </a>
+
+                                @* 2. Form ẩn thực hiện lệnh POST bảo mật *@
+                                <form id="logout-form" method="post" asp-page="/Logout" style="display:none;">
+                                    @* ASP.NET sẽ tự chèn Antiforgery Token vào đây *@
+                                </form>
+                            }
+                        </li>
                     </ul>
                 </div>
             </div>

@@ -13,14 +13,13 @@ namespace Learning.Pages
         {
             _signInManager = signInManager;
         }
-        public async  Task<IActionResult> OnGet()
+        public void OnGet()
         {
-            await OnPostLogoutAsync();
-            return RedirectToPage("Index");
         }
-        public async Task OnPostLogoutAsync()
+        public async Task<IActionResult> OnPostAsync()
         {
             await _signInManager.SignOutAsync();
+            return RedirectToPage("Index"); // Đăng xuất xong đá về trang chủ
         }
     }
 }

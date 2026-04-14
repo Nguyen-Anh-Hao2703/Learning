@@ -14,6 +14,6 @@ namespace Learning.Data
         }
 
         // Nếu cậu có DbSet cho các bảng khác thì để bên dưới này
-        public DbSet<User> Users { get; set; }
+        public new DbSet<User> Users { get; set; }
     }
 }

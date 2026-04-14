@@ -13,7 +13,7 @@ public class EditProfileModel : PageModel
     }
 
     [BindProperty]
-    public InputModel Input { get; set; }
+    public InputModel? Input { get; set; }
 
     public class InputModel
     {
@@ -43,7 +43,7 @@ public class EditProfileModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return NotFound();
 
-        user.FullName = Input.FullName!;
+        user.FullName = Input!.FullName!;
         user.Class = Input.Class;
         user.School = Input.School;
 
