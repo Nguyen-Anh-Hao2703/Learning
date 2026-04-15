@@ -13,7 +13,7 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace Learning.Pages
 {
-    
+
     public class TestModel : PageModel
     {
         private readonly UserManager<User> _userManager;
@@ -116,7 +116,7 @@ namespace Learning.Pages
             {
                 string content = await reader.ReadToEndAsync();
                 // Cắt ra danh sách các file câu hỏi (.slq)
-                string [] listQuestions = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+                string[] listQuestions = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
                 Content_Test = listQuestions[1] ?? "Bạn đã hoàn thành bài";
                 Answer_A = listQuestions[2] ?? "";
                 Answer_B = listQuestions[3] ?? "";
