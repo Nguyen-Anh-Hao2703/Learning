@@ -20,6 +20,7 @@ public class EditProfileModel : PageModel
         public string? FullName { get; set; }
         public string? Class { get; set; }
         public string? School { get; set; }
+        public string? Password { get; set; }
     }
 
     // Bước 1: Lấy dữ liệu cũ đổ vào ô nhập
@@ -32,7 +33,8 @@ public class EditProfileModel : PageModel
         {
             FullName = user.FullName,
             Class = user.Class,
-            School = user.School
+            School = user.School,
+            Password = user.Password
         };
         return Page();
     }
@@ -46,6 +48,7 @@ public class EditProfileModel : PageModel
         user.FullName = Input!.FullName!;
         user.Class = Input.Class;
         user.School = Input.School;
+        user.Password = Input.Password!;
 
         var result = await _userManager.UpdateAsync(user);
         if (result.Succeeded)
