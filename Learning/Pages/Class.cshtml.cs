@@ -29,8 +29,13 @@ namespace Learning.Pages
         public string UserClass { get; set; } = "";
         public List<string> Files { get; set; } = new List<string>();
 
-        public async Task OnGetAsync()
+        public async Task<IActionResult> OnGetAsync()
         {
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                // Đá người dùng về trang Login ngay lập tức
+                return RedirectToPage("/Login");
+            }
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
                 var user = await _userManager.FindByNameAsync(User.Identity.Name!);
@@ -50,6 +55,7 @@ namespace Learning.Pages
                 }
                 catch { }
             }
+            return Page();
         }
 
         public async Task<IActionResult> OnPostUploadFile(List<IFormFile> UploadFiles)

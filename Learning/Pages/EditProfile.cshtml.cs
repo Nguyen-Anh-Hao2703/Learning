@@ -27,7 +27,7 @@ public class EditProfileModel : PageModel
     public async Task<IActionResult> OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User); // Lấy user đang đăng nhập
-        if (user == null) return NotFound();
+        if (user == null) return RedirectToPage("/Login");
 
         Input = new InputModel
         {
@@ -43,7 +43,7 @@ public class EditProfileModel : PageModel
     public async Task<IActionResult> OnPostAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        if (user == null) return NotFound();
+        if (user == null) return RedirectToPage("/Login");
 
         user.FullName = Input!.FullName!;
         user.Class = Input.Class;

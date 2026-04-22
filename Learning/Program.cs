@@ -36,6 +36,20 @@ internal class Program
             options.Password.RequireUppercase = false;
         })
         .AddEntityFrameworkStores<ApplicationDbContext>();
+
+        builder.Services.ConfigureApplicationCookie(options =>
+        {
+            // 1. Cấu hình thời gian sống của Cookie (ví dụ: 7 ngày)
+            options.ExpireTimeSpan = TimeSpan.FromDays(30);
+
+            // 2. Nếu người dùng tắt trình duyệt rồi mở lại, Cookie vẫn còn (Ghi nhớ)
+            options.SlidingExpiration = true;
+
+            // 3. Đường dẫn đến trang Login nếu User chưa đăng nhập mà đòi vào xem điểm
+            options.LoginPath = "/Login";
+            options.AccessDeniedPath = "/AccessDenied";
+        });
+
         builder.Services.AddRazorPages();
 
         var app = builder.Build();

@@ -11,22 +11,30 @@ namespace Learning.Pages
     {
         private readonly UserManager<User> _userManager;
         private readonly HttpClient _httpClient = new HttpClient();
-        public int Point { get; set; } // Nên dùng Property để Razor dễ truy cập
+        public double Point { get; set; } // Nên dùng Property để Razor dễ truy cập
         public string UserName = string.Empty;
         public string Class = string.Empty;
         public ResultModel(UserManager<User> userManager)
         {
             _userManager = userManager;
         }
-        public async Task OnGetAsync(int score) // Đổi từ void sang Task
+        public async Task<IActionResult> OnGetAsync(double score) // Đổi từ void sang Task
         {
             var user = await _userManager.GetUserAsync(User);
+
+            // Nếu không tìm thấy User (do tắt trình duyệt, hết hạn session)
+            if (user == null)
+            {
+                // Đá người dùng về trang Login ngay lập tức
+                return RedirectToPage("/Login");
+            }
             if (user != null)
             {
                 UserName = user.FullName ?? "N/A";
                 Class = user.Class ?? "N/A";
             }
             Point = score;
+            return Page();
         }
     }
 }

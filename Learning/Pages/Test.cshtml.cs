@@ -14,6 +14,7 @@ using static System.Net.Mime.MediaTypeNames;
 namespace Learning.Pages
 {
 
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public class TestModel : PageModel
     {
         private readonly UserManager<User> _userManager;
@@ -45,9 +46,16 @@ namespace Learning.Pages
             _userManager = userManager;
             _supabase = supabase;
         }
-        public async Task<IActionResult> OnGet(string path, int index, int? point)
+        public async Task<IActionResult> OnGetAsync(string path, int index, int? point)
         {
             var user = await _userManager.GetUserAsync(User);
+
+            // Nếu không tìm thấy User (do tắt trình duyệt, hết hạn session)
+            if (user == null)
+            {
+                // Đá người dùng về trang Login ngay lập tức
+                return RedirectToPage("/Login");
+            }
             if (user != null)
             {
                 currentUserName = user.UserName ?? "Tài khoản không xác định";
@@ -83,20 +91,26 @@ namespace Learning.Pages
                     // Cập nhật totalQuestions Ở ĐÂY sau khi đã đọc xong file
                     int totalQuestions = listQuestions.Length;
 
+                    int numQuestion = totalQuestions + 1;
+
                     // KIỂM TRA: Đã hết câu hỏi chưa?
                     if (currentIndex >= totalQuestions && totalQuestions > 0)
                     {
                         // Đảm bảo lấy lại thông tin user trước khi insert
                         user = await _userManager.GetUserAsync(User);
+                        //Ép kiểu tường minh (Chắc chắn nhất)
+                        double score = ((double)10 / numQuestion) * currentPoint;
+                        // Làm tròn đến 2 chữ số thập phân (ví dụ: 6.67)
+                        double finalScore = Math.Round(score, 2);
                         var finalResult = new ExamResult
                         {
                             StudentName = user?.FullName ?? "Học sinh ẩn danh", // Không được để null
                             ClassName = user?.Class ?? "Không rõ lớp",
                             TestName = Path.GetFileName(decodedPath), // Chỉ lấy tên file cho ngắn gọn
-                            Point = currentPoint
+                            Point = finalScore
                         };
                         await _supabase.From<ExamResult>().Insert(finalResult);
-                        return RedirectToPage("/Result", new { score = currentPoint });
+                        return RedirectToPage("/Result", new { score = finalScore });
                     }
 
                     // Nếu còn câu hỏi, load câu hỏi hiện tại

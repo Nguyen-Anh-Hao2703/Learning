@@ -1,10 +1,15 @@
 using Learning.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Supabase.Gotrue;
+using System.IO;
 
 public class DashboardModel : PageModel
 {
     private readonly Supabase.Client _supabase;
+    private readonly UserManager<Learning.Models.User> _userManager;
+    private readonly IConfiguration _configuration;
     public List<ExamResult> ListResults { get; set; } = new();
 
     // Khai báo BindProperty để giữ giá trị trên ô nhập liệu (nếu muốn)
@@ -14,13 +19,27 @@ public class DashboardModel : PageModel
     [BindProperty(SupportsGet = true)]
     public string? FilterTest { get; set; }
 
-    public DashboardModel(Supabase.Client supabase)
+    public DashboardModel(UserManager<Learning.Models.User> userManager, IConfiguration configuration, Supabase.Client supabase)
     {
+        _userManager = userManager;
+        _configuration = configuration;
         _supabase = supabase;
     }
 
-    public async Task OnGetAsync(string filterClass, string filterTest)
+    public async Task<IActionResult> OnGetAsync(string filterClass, string filterTest)
     {
+        var user = await _userManager.GetUserAsync(User);
+
+        // Nếu không tìm thấy User (do tắt trình duyệt, hết hạn session)
+        if (user == null)
+        {
+            // Đá người dùng về trang Login ngay lập tức
+            return RedirectToPage("/Login");
+        }
+        if(user.Role != "Teacher")
+        {
+            return RedirectToPage("AccessDenied", new { namePage = "Trang xem điểm dành cho giáo viên"});
+        }
         var query = _supabase.From<ExamResult>();
 
         if (!string.IsNullOrEmpty(filterClass))
@@ -37,5 +56,6 @@ public class DashboardModel : PageModel
 
         var result = await query.Get();
         ListResults = result.Models; // Gán danh sách kết quả vào biến hiển thị
+        return Page();
     }
 }

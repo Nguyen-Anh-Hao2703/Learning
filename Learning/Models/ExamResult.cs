@@ -21,7 +21,7 @@ namespace Learning.Models // Đảm bảo có namespace để bên trang Test g�
         public string? TestName { get; set; }
 
         [Column("point")]
-        public int Point { get; set; }
+        public double Point { get; set; }
 
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.Now;
