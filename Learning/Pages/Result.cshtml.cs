@@ -21,13 +21,6 @@ namespace Learning.Pages
         public async Task<IActionResult> OnGetAsync(double score) // Đổi từ void sang Task
         {
             var user = await _userManager.GetUserAsync(User);
-
-            // Nếu không tìm thấy User (do tắt trình duyệt, hết hạn session)
-            if (user == null)
-            {
-                // Đá người dùng về trang Login ngay lập tức
-                return RedirectToPage("/Login");
-            }
             if (user != null)
             {
                 UserName = user.FullName ?? "N/A";

@@ -49,13 +49,6 @@ namespace Learning.Pages
         public async Task<IActionResult> OnGetAsync(string path, int index, int? point)
         {
             var user = await _userManager.GetUserAsync(User);
-
-            // Nếu không tìm thấy User (do tắt trình duyệt, hết hạn session)
-            if (user == null)
-            {
-                // Đá người dùng về trang Login ngay lập tức
-                return RedirectToPage("/Login");
-            }
             if (user != null)
             {
                 currentUserName = user.UserName ?? "Tài khoản không xác định";

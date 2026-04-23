@@ -29,14 +29,7 @@ public class DashboardModel : PageModel
     public async Task<IActionResult> OnGetAsync(string filterClass, string filterTest)
     {
         var user = await _userManager.GetUserAsync(User);
-
-        // Nếu không tìm thấy User (do tắt trình duyệt, hết hạn session)
-        if (user == null)
-        {
-            // Đá người dùng về trang Login ngay lập tức
-            return RedirectToPage("/Login");
-        }
-        if(user.Role != "Teacher")
+        if(user!.Role != "Teacher")
         {
             return RedirectToPage("AccessDenied", new { namePage = "Trang xem điểm dành cho giáo viên"});
         }

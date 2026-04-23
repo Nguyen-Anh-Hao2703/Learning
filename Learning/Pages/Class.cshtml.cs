@@ -33,11 +33,6 @@ namespace Learning.Pages
         {
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
-                // Đá người dùng về trang Login ngay lập tức
-                return RedirectToPage("/Login");
-            }
-            if (User.Identity != null && User.Identity.IsAuthenticated)
-            {
                 var user = await _userManager.FindByNameAsync(User.Identity.Name!);
                 CurrentUserRole = user?.Role ?? "";
                 UserClass = user?.Class ?? "";
