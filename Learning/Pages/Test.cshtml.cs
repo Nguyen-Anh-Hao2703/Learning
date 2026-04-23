@@ -84,15 +84,13 @@ namespace Learning.Pages
                     // Cập nhật totalQuestions Ở ĐÂY sau khi đã đọc xong file
                     int totalQuestions = listQuestions.Length;
 
-                    int numQuestion = totalQuestions + 1;
-
                     // KIỂM TRA: Đã hết câu hỏi chưa?
                     if (currentIndex >= totalQuestions && totalQuestions > 0)
                     {
                         // Đảm bảo lấy lại thông tin user trước khi insert
                         user = await _userManager.GetUserAsync(User);
                         //Ép kiểu tường minh (Chắc chắn nhất)
-                        double score = ((double)10 / numQuestion) * currentPoint;
+                        double score = ((double)10 / totalQuestions) * currentPoint;
                         // Làm tròn đến 2 chữ số thập phân (ví dụ: 6.67)
                         double finalScore = Math.Round(score, 2);
                         var finalResult = new ExamResult
