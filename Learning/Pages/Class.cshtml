@@ -6,24 +6,17 @@
 
 <div class="container mt-4">
     @* --- THÔNG BÁO --- *@
-    @if (TempData["Error"] != null)
+    @if (TempData["Error"] != null || TempData["Message"] != null)
     {
-        <div class="alert alert-danger alert-dismissible fade show shadow-sm">
-            @TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    }
-    @if (TempData["Message"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show shadow-sm">
-            @TempData["Message"]
+        <div class="alert @(TempData["Error"] != null ? "alert-danger" : "alert-success") alert-dismissible fade show shadow-sm">
+            @(TempData["Error"] ?? TempData["Message"])
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
     @* --- BREADCRUMB --- *@
     <nav aria-label="breadcrumb">
-        <ol class="breadcrumb shadow-sm p-2 bg-light rounded">
+        <ol class="breadcrumb shadow-sm p-3 bg-white rounded border">
             <li class="breadcrumb-item"><a href="/Index" class="text-decoration-none">🏠 Trang chủ</a></li>
             <li class="breadcrumb-item active">@Model.sName</li>
             <li class="breadcrumb-item active" aria-current="page">Lớp @Model.cName</li>
@@ -31,96 +24,108 @@
     </nav>
 
     @* --- HEADER --- *@
-    <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm border-bottom border-primary border-3">
-        <div style="cursor: default; user-select: none;">
-            <h2 class="text-primary mb-0">📖 Môn học: @Model.subID</h2>
-            <small class="text-muted">Trường: @Model.sName | Lớp: @Model.cName</small>
+    <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-4 rounded shadow-sm border-start border-primary border-5">
+        <div>
+            <h2 class="text-primary fw-bold mb-0">📖 @Model.subID</h2>
+            <p class="text-muted mb-0 small">@Model.sName • Lớp @Model.cName</p>
         </div>
         <div class="text-end">
-            <span class="badge bg-info text-dark fs-6">🍎 GV: @Model.tID</span>
+            <span class="badge rounded-pill bg-primary px-3 py-2">🍎 GV: @Model.tID</span>
         </div>
     </div>
 
     @* --- PHẦN DÀNH CHO GIÁO VIÊN --- *@
     @if (Model.CurrentUserRole == "Teacher")
     {
-        <div class="upload-section bg-light p-4 mb-4 border-start border-primary border-4 shadow-sm">
-            <h5 class="mb-3 text-primary">📤 Tải lên tài liệu mới</h5>
-            <form method="post" enctype="multipart/form-data" asp-page-handler="UploadFile">
-                @* Giữ lại dữ liệu URL cho lệnh POST *@
-                <input type="hidden" name="sName" value="@Model.sName" />
-                <input type="hidden" name="cName" value="@Model.cName" />
-                <input type="hidden" name="subID" value="@Model.subID" />
-                <input type="hidden" name="tID" value="@Model.tID" />
+        <div class="card border-0 shadow-sm mb-4" style="background-color: #f8f9fa;">
+            <div class="card-body p-4">
+                <h5 class="mb-3 text-primary fw-bold"><i class="bi bi-cloud-arrow-up-fill me-2"></i>Tải lên tài liệu mới</h5>
+                <form method="post" enctype="multipart/form-data" asp-page-handler="UploadFile">
+                    <input type="hidden" name="sName" value="@Model.sName" />
+                    <input type="hidden" name="cName" value="@Model.cName" />
+                    <input type="hidden" name="subID" value="@Model.subID" />
+                    <input type="hidden" name="tID" value="@Model.tID" />
 
-                <div class="input-group">
-                    <input type="file" name="UploadFiles" class="form-control"
-                           accept=".qs, .pdf, .docx, .pptx, .txt, .mp4, .zip, .mp3, .jpg, .png" required multiple />
-                    <button type="submit" class="btn btn-primary px-4">⬆Tải lên</button>
-                </div>
-                <div class="mt-2" style="cursor: default; user-select: none;">
-                    <small class="text-danger fw-bold">⚠Lưu ý:</small>
-                    <small class="text-muted">Hệ thống tự động xử lý tên file không dấu để tránh lỗi.</small>
-                </div>
-            </form>
+                    <div class="input-group mb-2">
+                        <input type="file" name="UploadFiles" class="form-control shadow-none" required multiple />
+                        <button type="submit" class="btn btn-primary px-4 fw-bold">⬆ Tải lên</button>
+                    </div>
+                    <small class="text-muted italic">Chấp nhận: .qs, .pdf, .exe, .docx, .pptx, .mp4, .zip</small>
+                </form>
+            </div>
         </div>
     }
 
-    <hr />
-
     @* --- DANH SÁCH FILE --- *@
-    <h5 class="mb-3" style="cursor: default; user-select: none;">📂 Tài liệu học tập</h5>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold"><i class="bi bi-folder2-open me-2"></i>Tài liệu học tập</h5>
+        <span class="badge bg-secondary">@(Model.Files?.Count() ?? 0) files</span>
+    </div>
+
     <div class="row">
         @if (Model.Files != null && Model.Files.Any())
         {
             @foreach (var file in Model.Files)
             {
-                <div class="col-12 mb-2">
-                    <div class="card card-body shadow-sm d-flex flex-row justify-content-between align-items-center py-2">
-                        <div class="d-flex align-items-center" style="cursor: default;">
-                            <span class="fs-4 me-3">📄</span>
-                            <div>
-                                <span class="fw-bold d-block">@file</span>
+                <div class="col-12 mb-3">
+                    <div class="card exam-card border-0 shadow-sm">
+                        <div class="card-body d-flex align-items-center justify-content-between p-3">
+
+                            <div class="d-flex align-items-center flex-grow-1">
+                                <div class="file-icon me-3 text-primary fs-2">
+                                    @if (file.EndsWith(".qs"))
+                                    {
+                                        <span>📝</span>
+                                    }
+                                    else if (IsImage(file))
+                                    {
+
+                                        <span>🖼️</span>
+                                    }
+                                    else
+                                    {
+
+                                        <span>📄</span>
+                                    }
+                                </div>
+                                <div class="overflow-hidden">
+                                    <span class="fw-bold d-block text-truncate" style="max-width: 400px;">@file</span>
+                                    @if (file.EndsWith(".qs"))
+                                    {
+                                        <span class="badge bg-warning text-dark small" style="font-size: 0.65rem;">Learning Player Required</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2 align-items-center">
+                                <a href="@Model.GetFileUrl(file)" target="_blank" download="@file"
+                                   class="btn btn-outline-success btn-sm fw-bold">📥 Tải về</a>
+
                                 @if (file.EndsWith(".qs"))
                                 {
-                                    <span class="badge bg-warning text-dark" style="font-size: 0.7rem;">Yêu cầu Learning Player</span>
+                                    <a href="/Test?path=@(System.Net.WebUtility.UrlEncode(Model.GetFileUrl(file)))&index=0"
+                                       class="btn btn-start btn-sm px-3 fw-bold shadow-sm">📚 Làm bài</a>
+                                }
+
+                                @if (Model.CurrentUserRole == "Teacher")
+                                {
+                                    <div class="vr mx-2"></div> @* Vạch chia giữa học sinh và GV *@
+                                    <a asp-page="/Dashboard" asp-route-filterClass="@Model.cName" asp-route-filterTest="@file"
+                                       class="btn btn-outline-info btn-sm">📊 Điểm</a>
+
+                                    <form method="post" asp-page-handler="DeletedFile" asp-route-file="@file" class="d-inline">
+                                        <input type="hidden" name="sName" value="@Model.sName" />
+                                        <input type="hidden" name="cName" value="@Model.cName" />
+                                        <input type="hidden" name="subID" value="@Model.subID" />
+                                        <input type="hidden" name="tID" value="@Model.tID" />
+                                        <button type="submit" class="btn btn-light text-danger btn-sm border"
+                                                onclick="return confirm('Xóa vĩnh viễn file này?')">
+                                            🗑️
+                                        </button>
+                                    </form>
                                 }
                             </div>
-                        </div>
 
-                        <div class="d-flex align-items-center gap-2">
-                            <a href="@Model.GetFileUrl(file)" target="_blank" download="@file" class="btn btn-success btn-sm px-3 shadow-sm">
-                                📥 Tải xuống
-                            </a>
-
-                            @if (file.EndsWith(".qs"))
-                            {
-                                <a href="/Test?path=@(System.Net.WebUtility.UrlEncode(Model.GetFileUrl(file)))&index=0"
-                                   class="btn btn-primary btn-sm px-3 shadow-sm">
-                                    📚 Làm bài tập
-                                </a>
-                            }
-
-                            @if (Model.CurrentUserRole == "Teacher")
-                            {
-                                <a asp-page="/Dashboard"
-                                   asp-route-filterClass="@Model.cName"
-                                   asp-route-filterTest="@file"
-                                   class="btn btn-info btn-sm px-3 shadow-sm">
-                                    📊 Xem điểm
-                                </a>
-
-                                <form method="post" asp-page-handler="DeletedFile" asp-route-file="@file" class="d-inline">
-                                    <input type="hidden" name="sName" value="@Model.sName" />
-                                    <input type="hidden" name="cName" value="@Model.cName" />
-                                    <input type="hidden" name="subID" value="@Model.subID" />
-                                    <input type="hidden" name="tID" value="@Model.tID" />
-                                    <button type="submit" class="btn btn-danger btn-sm shadow-sm"
-                                            onclick="return confirm('Xóa vĩnh viễn bài này?')">
-                                        🗑️ Xóa
-                                    </button>
-                                </form>
-                            }
                         </div>
                     </div>
                 </div>
@@ -128,32 +133,36 @@
         }
         else
         {
-            <div class="col-12 text-center py-5">
-                <div class="text-muted" style="cursor: default; user-select: none;">
-                    <i class="fs-1 d-block mb-3">📁</i>
-                    <p>Thư mục này hiện đang trống.</p>
+            <div class="col-12 text-center py-5 bg-white rounded shadow-sm border">
+                <i class="bi bi-folder-x fs-1 text-muted"></i>
+                <p class="text-muted mt-2">Chưa có tài liệu nào được tải lên.</p>
+            </div>
+        }
+    </div>
+
+    @* --- FOOTER TOOLS --- *@
+    <div class="row mt-5 g-3">
+        <div class="col-md-6">
+            <div class="p-4 bg-dark text-white rounded-4 shadow h-100 text-center">
+                <h6>Học sinh</h6>
+                <p class="small opacity-75">Cần phần mềm để làm bài tập .qs?</p>
+                <a href="~/Learning Student Setup.exe" class="btn btn-light btn-sm fw-bold rounded-pill px-4">⬇ Tải Learning Student</a>
+            </div>
+        </div>
+        @if (Model.CurrentUserRole == "Teacher")
+        {
+            <div class="col-md-6">
+                <div class="p-4 bg-dark text-white rounded-4 shadow h-100 text-center border-start border-primary border-4">
+                    <h6>Giáo viên</h6>
+                    <p class="small opacity-75">Công cụ tạo bài tập .slq, .qs</p>
+                    <a href="~/Learning Setup.exe" class="btn btn-light btn-sm fw-bold rounded-pill px-4">⬇ Tải Learning Creator</a>
                 </div>
             </div>
         }
     </div>
 
-    @* --- FOOTER TRANG --- *@
-    <div class="mt-5 p-3 bg-dark text-white rounded shadow text-center" style="cursor: default; user-select: none;">
-        <h6>Ứng dụng hỗ trợ học tập</h6>
-        <p class="small opacity-75">Để chạy các file <b>.qs</b>, hãy cài đặt <b>Learning Student</b> phiên bản 4.0.</p>
-        <a href="~/Learning Student Setup.exe" class="btn btn-light btn-sm fw-bold">⬇️ Tải Learning Student</a>
-    </div>
-    @if (Model.CurrentUserRole == "Teacher")
-    {
-        <div class="mt-5 p-3 bg-dark text-white rounded shadow text-center" style="cursor: default; user-select: none;">
-            <h6>Ứng dụng hỗ trợ tạo bài tập định dạng .slq, .qs</h6>
-            <p class="small opacity-75">Để tạo các file <b>.slq</b>, <b>.qs</b> hãy cài đặt <b>Learning</b> phiên bản 3.0.</p>
-            <a href="~/Learning Setup.exe" class="btn btn-light btn-sm fw-bold">⬇️ Tải Learning</a>
-        </div>
-    }
-
-    <div class="mt-4 mb-5">
-        <a href="/Index" class="btn btn-outline-secondary px-4">⬅️ Quay lại</a>
+    <div class="mt-5 mb-5">
+        <a href="/Index" class="btn btn-link text-decoration-none text-secondary"><i class="bi bi-arrow-left"></i> Quay lại trang chủ</a>
     </div>
 </div>
 
