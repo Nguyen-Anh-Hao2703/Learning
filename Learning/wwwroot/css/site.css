@@ -8,8 +8,12 @@ html {
   }
 }
 
+.green_layout {
+    background-color: greenyellow;
+    padding: 10px 20px; /* 10px là trên/dưới, 20px là trái/phải */
+}
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 html {
