@@ -9,9 +9,21 @@ html {
 }
 
 .green_layout {
-    background-color: greenyellow;
-    padding: 10px 5px; /* 10px là trên/dưới, 20px là trái/phải */
+    /* Màu chuyển từ xanh sáng sang xanh lá dịu hơn */
+    background: linear-gradient(135deg, #adff2f 0%, #92d050 100%);
+    /* Giảm độ cao xuống một chút */
+    padding: 10px 0;
+    /* Thêm đổ bóng nhẹ để tách biệt với phần thân trắng */
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-bottom: none; /* Bỏ viền dưới nếu có */
 }
+
+/* Chỉnh lại logo cho cân đối */
+.green_layout img {
+    height: 50px !important; /* Thu nhỏ logo lại một tí cho tinh tế */
+    width: auto;
+}
+
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
     box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
