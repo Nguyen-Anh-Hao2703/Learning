@@ -10,7 +10,7 @@ html {
 
 .green_layout {
     /* Màu chuyển từ xanh sáng sang xanh lá dịu hơn */
-    background: linear-gradient(135deg, #adff2f 0%, #92d050 100%);
+    background: linear-gradient(135deg, #adff2f 0%, #ffffff 100%);
     /* Giảm độ cao xuống một chút */
     padding: 10px 0;
     /* Thêm đổ bóng nhẹ để tách biệt với phần thân trắng */
