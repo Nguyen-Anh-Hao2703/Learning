@@ -17,7 +17,7 @@ namespace Learning.Pages
         public string? SelectedAnswer { get; set; }
 
         public int currentIndex { get; set; }
-        public int currentPoint { get; set; }
+        public int currentPoint { get; set; } // Xóa khởi tạo = 0 ở đây để nhận từ tham số
         public string? url { get; set; }
         public string? Content_Test { get; set; }
         public string? Picture { get; set; }
@@ -90,16 +90,16 @@ namespace Learning.Pages
             }
         }
 
-        // Đã thêm async Task ở đây để chạy được Supabase
         public async Task<IActionResult> OnPostChoice(string path, int currentIndex, int currentPoint, string correctText)
         {
-            // 1. Cộng điểm ngay lập tức
+            // 1. Kiểm tra đáp án câu hiện tại và cộng điểm vào biến local
+            int updatedPoint = currentPoint;
             if (SelectedAnswer == correctText)
             {
-                currentPoint++;
+                updatedPoint++;
             }
 
-            // 2. Kiểm tra câu cuối
+            // 2. Load lại file để kiểm tra xem có phải câu cuối không
             string decodedPath = System.Net.WebUtility.UrlDecode(path);
             byte[] fileData = await _httpClient.GetByteArrayAsync(decodedPath);
             using (MemoryStream ms = new MemoryStream(fileData))
@@ -112,10 +112,11 @@ namespace Learning.Pages
                     string content = await reader.ReadToEndAsync();
                     var listQuestions = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
+                    // Nếu là câu cuối cùng
                     if (currentIndex >= listQuestions.Length - 1)
                     {
                         var user = await _userManager.GetUserAsync(User);
-                        double finalScore = Math.Round(((double)10 / listQuestions.Length) * currentPoint, 2);
+                        double finalScore = Math.Round(((double)10 / listQuestions.Length) * updatedPoint, 2);
 
                         var finalResult = new ExamResult
                         {
@@ -131,7 +132,8 @@ namespace Learning.Pages
                 }
             }
 
-            return RedirectToPage(new { path = path, index = currentIndex + 1, point = currentPoint });
+            // Chưa hết thì sang câu tiếp theo với số điểm đã cập nhật
+            return RedirectToPage(new { path = path, index = currentIndex + 1, point = updatedPoint });
         }
     }
 

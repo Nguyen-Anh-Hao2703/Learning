@@ -17,6 +17,7 @@
             <h4 class="fw-bold mb-4">Câu @(Model.currentIndex + 1): @Model.Content_Test</h4>
 
             <form method="post" asp-page-handler="Choice">
+                @* Các input này cực kỳ quan trọng để giữ trạng thái điểm số và câu hỏi *@
                 <input type="hidden" name="path" value="@Model.url" />
                 <input type="hidden" name="currentIndex" value="@Model.currentIndex" />
                 <input type="hidden" name="currentPoint" value="@Model.currentPoint" />
