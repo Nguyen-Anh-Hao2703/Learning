@@ -39,6 +39,8 @@ namespace Learning.Pages
         public string[]? data;
         public string[]? data_list_question;
         private readonly Supabase.Client _supabase; // Khai báo ở đây
+        private static Random rng = new Random();
+        public List<AnswerOption> ShuffledAnswers { get; set; } = new();
 
         // Inject cả userManager và supabase vào
         public TestModel(UserManager<User> userManager, Supabase.Client supabase)
@@ -116,68 +118,70 @@ namespace Learning.Pages
         }
         public async Task Load(ZipArchiveEntry? nameFileSLQ)
         {
-            // Tải toàn bộ nội dung file về dưới dạng chuỗi (string)
             using (StreamReader reader = new StreamReader(nameFileSLQ!.Open()))
             {
                 string content = await reader.ReadToEndAsync();
-                // Cắt ra danh sách các file câu hỏi (.slq)
-                string[] listQuestions = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-                Content_Test = listQuestions[1] ?? "Bạn đã hoàn thành bài";
-                Answer_A = listQuestions[2] ?? "";
-                Answer_B = listQuestions[3] ?? "";
-                Answer_C = listQuestions[4] ?? "";
-                Answer_D = listQuestions[5] ?? "";
-                current_Answer = listQuestions[6] ?? "";
-                if (listQuestions.Length == 8)
+                string[] lines = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+
+                // Lưu nội dung câu hỏi
+                Content_Test = lines[1];
+
+                // Tạo danh sách đáp án để xáo trộn
+                var options = new List<AnswerOption>
                 {
-                    string path = listQuestions[7] ?? "iVBORw0KGgoAAAANSUhEUgAAAZAAAABLAQMAAACAYf7kAAAABlBMVEUAAAD///+l2Z/dAAAAAXRSTlMAQObYZgAAAFRJREFUeAFjYBgFo2AUjIJRMApGwSigP6ChvYGBmYGB8QCG9v8P6P//f4CB+QCG9v8f0P///wEG5gMY2v9/QP///wcYmA9gaP9/QP///x9gYBgFAwYA6CEp96B79mYAAAAASUVORK5CYII=";
-                    if (path != null)
-                    {
-                        Picture = path;
-                    }
-                }
+                    new AnswerOption { Key = "A", Value = lines[2] },
+                    new AnswerOption { Key = "B", Value = lines[3] },
+                    new AnswerOption { Key = "C", Value = lines[4] },
+                    new AnswerOption { Key = "D", Value = lines[5] }
+                };
+
+                // Lưu đáp án đúng thực tế (Nội dung văn bản)
+                string correctKey = lines[6]; // Ví dụ: "A"
+                int correctIdx = correctKey[0] - 'A' + 2; // Chuyển A->2, B->3...
+                current_Answer = lines[correctIdx]; // Đây là nội dung text của câu đúng
+
+                // Xáo trộn
+                options.Shuffle();
+                ShuffledAnswers = options;
+
+                // Xử lý hình ảnh
+                if (lines.Length >= 8) Picture = lines[7];
             }
         }
-        public async Task<IActionResult> OnPostChoiceAsync(string path, int currentIndex, int currentPoint)
+        #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        public async Task<IActionResult> OnPostChoiceAsync(string path, int currentIndex, int currentPoint, string correctText)
+        #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
-            if (string.IsNullOrEmpty(path)) return RedirectToPage("/Index");
-
-            // 1. Tải lại file để lấy đáp án đúng (Vì HTTP là không trạng thái)
-            string decodedPath = System.Net.WebUtility.UrlDecode(path);
-            byte[] fileData = await _httpClient.GetByteArrayAsync(decodedPath);
-            using (MemoryStream ms = new MemoryStream(fileData))
-            using (ZipArchive archive = new ZipArchive(ms))
+            // Giải thích: Hào truyền 'correctText' (nội dung câu đúng) từ Form thay vì so sánh A, B, C
+            if (SelectedAnswer == correctText)
             {
-                ZipArchiveEntry? nameFileEntry = archive.GetEntry("name.txt");
-                if (nameFileEntry != null)
-                {
-                    using (StreamReader reader = new StreamReader(nameFileEntry.Open()))
-                    {
-                        string content = await reader.ReadToEndAsync();
-                        var listQuestions = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-
-                        // Lấy file câu hỏi hiện tại để so đáp án
-                        ZipArchiveEntry? currentQS = archive.GetEntry(listQuestions[currentIndex]);
-                        if (currentQS != null)
-                        {
-                            using (StreamReader qsReader = new StreamReader(currentQS.Open()))
-                            {
-                                string qsContent = await qsReader.ReadToEndAsync();
-                                var lines = qsContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-                                string correctAnswer = lines[6]; // Đáp án đúng nằm ở dòng 7
-
-                                if (SelectedAnswer == correctAnswer)
-                                {
-                                    currentPoint++;
-                                }
-                            }
-                        }
-                    }
-                }
+                currentPoint++;
             }
 
-            // 2. Chuyển sang câu tiếp theo
             return RedirectToPage(new { path = path, index = currentIndex + 1, point = currentPoint });
+        }
+    }
+    public class AnswerOption
+    {
+        public string? Key { get; set; }    // A, B, C, hoặc D
+        public string? Value { get; set; }  // Nội dung thực tế: "Con bò", "Con gà"...
+    }
+
+    public static class ListExtensions
+    {
+        private static Random rng = new Random();
+
+        public static void Shuffle<T>(this IList<T> list)
+        {
+            int n = list.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = rng.Next(n + 1);
+                T value = list[k];
+                list[k] = list[n];
+                list[n] = value;
+            }
         }
     }
 }

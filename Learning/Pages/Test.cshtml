@@ -7,28 +7,17 @@
         <input type="hidden" name="currentIndex" value="@Model.currentIndex" />
         <input type="hidden" name="currentPoint" value="@Model.currentPoint" />
 
-        <p>
-            @Model.Content_Test
-            @if (!string.IsNullOrEmpty(Model.Picture))
+        <input type="hidden" name="correctText" value="@Model.current_Answer" />
+
+        <div class="list-group">
+            @foreach (var item in Model.ShuffledAnswers)
             {
-                <img src="data:image/png;base64,@Model.Picture" style="max-width:100%;" />
+                <label class="list-group-item">
+                    <input class="form-check-input me-1" type="radio" asp-for="SelectedAnswer" value="@item.Value">
+                    @item.Value
+                </label>
             }
-        </p>
-
-        <div id="answers-list">
-            <input type="radio" asp-for="SelectedAnswer" id="A" value="A">
-            <label for="A">@Model.Answer_A</label><br>
-
-            <input type="radio" asp-for="SelectedAnswer" id="B" value="B">
-            <label for="B">@Model.Answer_B</label><br>
-
-            <input type="radio" asp-for="SelectedAnswer" id="C" value="C">
-            <label for="C">@Model.Answer_C</label><br>
-
-            <input type="radio" asp-for="SelectedAnswer" id="D" value="D">
-            <label for="D">@Model.Answer_D</label>
         </div>
-
-        <button type="submit" class="btn btn-primary mt-3">Câu tiếp theo</button>
+        <button type="submit" class="btn btn-success mt-3">Câu tiếp theo</button>
     </form>
 </div>
