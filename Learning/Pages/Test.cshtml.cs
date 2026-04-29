@@ -21,7 +21,7 @@ namespace Learning.Pages
         public string? url { get; set; }
         public string? Content_Test { get; set; }
         public string? Picture { get; set; }
-        public string? current_Answer { get; set; } // Lưu nội dung đáp án đúng (Text)
+        public string? current_Answer { get; set; }
         public List<AnswerOption> ShuffledAnswers { get; set; } = new();
 
         public TestModel(UserManager<User> userManager, Supabase.Client supabase)
@@ -53,9 +53,8 @@ namespace Learning.Pages
                     listQuestions = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
                 }
 
-                // Nếu đã vượt quá số câu hỏi (đã nộp bài xong ở Post), chuyển về Result
                 if (currentIndex >= listQuestions.Length)
-                    return RedirectToPage("/Result", new { score = currentPoint }); // Hoặc xử lý tùy ý
+                    return RedirectToPage("/Result", new { score = currentPoint });
 
                 ZipArchiveEntry? currentQS = archive.GetEntry(listQuestions[currentIndex]);
                 if (currentQS != null) await LoadQuestionData(currentQS);
@@ -72,7 +71,6 @@ namespace Learning.Pages
 
                 Content_Test = lines[1];
 
-                // Tạo danh sách đáp án
                 var options = new List<AnswerOption>
                 {
                     new AnswerOption { Value = lines[2] },
@@ -81,12 +79,10 @@ namespace Learning.Pages
                     new AnswerOption { Value = lines[5] }
                 };
 
-                // Xác định nội dung đáp án đúng dựa trên ký tự A, B, C, D ở dòng 7
                 string correctKey = lines[6].Trim().ToUpper();
                 int correctIdx = correctKey[0] - 'A' + 2;
                 current_Answer = lines[correctIdx];
 
-                // Xáo trộn
                 options.Shuffle();
                 ShuffledAnswers = options;
 
@@ -94,50 +90,50 @@ namespace Learning.Pages
             }
         }
 
+        // Đã thêm async Task ở đây để chạy được Supabase
         public async Task<IActionResult> OnPostChoice(string path, int currentIndex, int currentPoint, string correctText)
         {
-            // 1. Kiểm tra đáp án của câu vừa làm và cộng điểm ngay lập tức
+            // 1. Cộng điểm ngay lập tức
             if (SelectedAnswer == correctText)
             {
                 currentPoint++;
             }
 
-            // 2. Kiểm tra xem đây có phải là câu cuối cùng không
+            // 2. Kiểm tra câu cuối
             string decodedPath = System.Net.WebUtility.UrlDecode(path);
             byte[] fileData = await _httpClient.GetByteArrayAsync(decodedPath);
             using (MemoryStream ms = new MemoryStream(fileData))
             using (ZipArchive archive = new ZipArchive(ms))
             {
                 ZipArchiveEntry? nameFileEntry = archive.GetEntry("name.txt");
-                using StreamReader reader = new StreamReader(nameFileEntry!.Open());
-                string content = await reader.ReadToEndAsync();
-                var listQuestions = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-
-                // NẾU LÀ CÂU CUỐI CÙNG (currentIndex bắt đầu từ 0 nên so sánh với Length - 1)
-                if (currentIndex >= listQuestions.Length - 1)
+                if (nameFileEntry != null)
                 {
-                    var user = await _userManager.GetUserAsync(User);
-                    double score = Math.Round(((double)10 / listQuestions.Length) * currentPoint, 2);
+                    using StreamReader reader = new StreamReader(nameFileEntry.Open());
+                    string content = await reader.ReadToEndAsync();
+                    var listQuestions = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
-                    var finalResult = new ExamResult
+                    if (currentIndex >= listQuestions.Length - 1)
                     {
-                        StudentName = user?.FullName ?? "Học sinh ẩn danh",
-                        ClassName = user?.Class ?? "Không rõ lớp",
-                        TestName = Path.GetFileName(decodedPath),
-                        Point = score
-                    };
+                        var user = await _userManager.GetUserAsync(User);
+                        double finalScore = Math.Round(((double)10 / listQuestions.Length) * currentPoint, 2);
 
-                    await _supabase.From<ExamResult>().Insert(finalResult);
-                    return RedirectToPage("/Result", new { score = score });
+                        var finalResult = new ExamResult
+                        {
+                            StudentName = user?.FullName ?? "Học sinh ẩn danh",
+                            ClassName = user?.Class ?? "Không rõ lớp",
+                            TestName = Path.GetFileName(decodedPath),
+                            Point = finalScore
+                        };
+
+                        await _supabase.From<ExamResult>().Insert(finalResult);
+                        return RedirectToPage("/Result", new { score = finalScore });
+                    }
                 }
             }
 
-            // Nếu chưa hết câu thì mới đi tiếp sang câu index + 1
             return RedirectToPage(new { path = path, index = currentIndex + 1, point = currentPoint });
         }
     }
-
-    // --- Các lớp bổ trợ ---
 
     public class AnswerOption
     {
