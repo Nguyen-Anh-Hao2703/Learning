@@ -39,56 +39,27 @@ namespace Learning.Pages
             currentPoint = point ?? 0;
             string decodedPath = System.Net.WebUtility.UrlDecode(path);
 
-            try
+            byte[] fileData = await _httpClient.GetByteArrayAsync(decodedPath);
+            using (MemoryStream ms = new MemoryStream(fileData))
+            using (ZipArchive archive = new ZipArchive(ms))
             {
-                byte[] fileData = await _httpClient.GetByteArrayAsync(decodedPath);
-                using (MemoryStream ms = new MemoryStream(fileData))
-                using (ZipArchive archive = new ZipArchive(ms))
+                ZipArchiveEntry? nameFileEntry = archive.GetEntry("name.txt");
+                if (nameFileEntry == null) return Page();
+
+                string[] listQuestions;
+                using (StreamReader reader = new StreamReader(nameFileEntry.Open()))
                 {
-                    // 1. Đọc danh sách câu hỏi
-                    ZipArchiveEntry? nameFileEntry = archive.GetEntry("name.txt");
-                    if (nameFileEntry == null) return Page();
-
-                    string[] listQuestions;
-                    using (StreamReader reader = new StreamReader(nameFileEntry.Open()))
-                    {
-                        string content = await reader.ReadToEndAsync();
-                        listQuestions = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-                    }
-
-                    int totalQuestions = listQuestions.Length;
-
-                    // 2. Kiểm tra kết thúc bài thi
-                    if (currentIndex >= totalQuestions)
-                    {
-                        var user = await _userManager.GetUserAsync(User);
-                        double score = Math.Round(((double)10 / totalQuestions) * currentPoint, 2);
-
-                        var finalResult = new ExamResult
-                        {
-                            StudentName = user?.FullName ?? "Học sinh ẩn danh",
-                            ClassName = user?.Class ?? "Không rõ lớp",
-                            TestName = Path.GetFileName(decodedPath),
-                            Point = score
-                        };
-
-                        await _supabase.From<ExamResult>().Insert(finalResult);
-                        return RedirectToPage("/Result", new { score = score });
-                    }
-
-                    // 3. Load nội dung câu hỏi hiện tại để hiển thị
-                    ZipArchiveEntry? currentQS = archive.GetEntry(listQuestions[currentIndex]);
-                    if (currentQS != null)
-                    {
-                        await LoadQuestionData(currentQS);
-                    }
+                    string content = await reader.ReadToEndAsync();
+                    listQuestions = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
                 }
-            }
-            catch (Exception)
-            {
-                return RedirectToPage("/Index");
-            }
 
+                // Nếu đã vượt quá số câu hỏi (đã nộp bài xong ở Post), chuyển về Result
+                if (currentIndex >= listQuestions.Length)
+                    return RedirectToPage("/Result", new { score = currentPoint }); // Hoặc xử lý tùy ý
+
+                ZipArchiveEntry? currentQS = archive.GetEntry(listQuestions[currentIndex]);
+                if (currentQS != null) await LoadQuestionData(currentQS);
+            }
             return Page();
         }
 
@@ -123,14 +94,45 @@ namespace Learning.Pages
             }
         }
 
-        public IActionResult OnPostChoice(string path, int currentIndex, int currentPoint, string correctText)
+        public async Task<IActionResult> OnPostChoice(string path, int currentIndex, int currentPoint, string correctText)
         {
-            // So sánh nội dung text để đảm bảo tính đúng đắn sau khi xáo trộn
+            // 1. Kiểm tra đáp án của câu vừa làm và cộng điểm ngay lập tức
             if (SelectedAnswer == correctText)
             {
                 currentPoint++;
             }
 
+            // 2. Kiểm tra xem đây có phải là câu cuối cùng không
+            string decodedPath = System.Net.WebUtility.UrlDecode(path);
+            byte[] fileData = await _httpClient.GetByteArrayAsync(decodedPath);
+            using (MemoryStream ms = new MemoryStream(fileData))
+            using (ZipArchive archive = new ZipArchive(ms))
+            {
+                ZipArchiveEntry? nameFileEntry = archive.GetEntry("name.txt");
+                using StreamReader reader = new StreamReader(nameFileEntry!.Open());
+                string content = await reader.ReadToEndAsync();
+                var listQuestions = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+                // NẾU LÀ CÂU CUỐI CÙNG (currentIndex bắt đầu từ 0 nên so sánh với Length - 1)
+                if (currentIndex >= listQuestions.Length - 1)
+                {
+                    var user = await _userManager.GetUserAsync(User);
+                    double score = Math.Round(((double)10 / listQuestions.Length) * currentPoint, 2);
+
+                    var finalResult = new ExamResult
+                    {
+                        StudentName = user?.FullName ?? "Học sinh ẩn danh",
+                        ClassName = user?.Class ?? "Không rõ lớp",
+                        TestName = Path.GetFileName(decodedPath),
+                        Point = score
+                    };
+
+                    await _supabase.From<ExamResult>().Insert(finalResult);
+                    return RedirectToPage("/Result", new { score = score });
+                }
+            }
+
+            // Nếu chưa hết câu thì mới đi tiếp sang câu index + 1
             return RedirectToPage(new { path = path, index = currentIndex + 1, point = currentPoint });
         }
     }
