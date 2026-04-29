@@ -2,157 +2,130 @@ using Learning.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Drawing;
-using System.IO;
 using System.IO.Compression;
-using System.Net.Http;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Learning.Pages
 {
-
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public class TestModel : PageModel
     {
         private readonly UserManager<User> _userManager;
-        [BindProperty]
-        public string? SelectedAnswer { get; set; } // Biến này sẽ lưu đáp án cuối cùng
+        private readonly Supabase.Client _supabase;
         private readonly HttpClient _httpClient = new HttpClient();
-        public int currentIndex = 0;
-        public string? Picture;
-        public string? Content_Test;
-        public string? Answer_A;
-        public string? Answer_B;
-        public string? Answer_C;
-        public string? Answer_D;
-        public string? url;
-        public string? User_Answer;
-        public string? content;
-        public string? current_Answer;
-        public int currentPoint;
-        public string? studentClass;
-        public string? currentUserName;
-        public string? FullName;
-        public string[]? data;
-        public string[]? data_list_question;
-        private readonly Supabase.Client _supabase; // Khai báo ở đây
-        private static Random rng = new Random();
+
+        [BindProperty]
+        public string? SelectedAnswer { get; set; }
+
+        public int currentIndex { get; set; }
+        public int currentPoint { get; set; }
+        public string? url { get; set; }
+        public string? Content_Test { get; set; }
+        public string? Picture { get; set; }
+        public string? current_Answer { get; set; } // Lưu nội dung đáp án đúng (Text)
         public List<AnswerOption> ShuffledAnswers { get; set; } = new();
 
-        // Inject cả userManager và supabase vào
         public TestModel(UserManager<User> userManager, Supabase.Client supabase)
         {
             _userManager = userManager;
             _supabase = supabase;
         }
+
         public async Task<IActionResult> OnGetAsync(string path, int index, int? point)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user != null)
-            {
-                currentUserName = user.UserName ?? "Tài khoản không xác định";
-                FullName = user.FullName ?? "Học sinh ẩn danh";
-                studentClass = user.Class ?? "Không rõ lớp";
-            }
-
             if (string.IsNullOrEmpty(path)) return RedirectToPage("/Index");
 
-            string decodedPath = System.Net.WebUtility.UrlDecode(path);
+            url = path;
             currentIndex = index;
             currentPoint = point ?? 0;
-            url = path;
+            string decodedPath = System.Net.WebUtility.UrlDecode(path);
 
-            string[] listQuestions = Array.Empty<string>();
-
-            if (Path.GetExtension(decodedPath).ToLower() == ".qs")
+            try
             {
                 byte[] fileData = await _httpClient.GetByteArrayAsync(decodedPath);
                 using (MemoryStream ms = new MemoryStream(fileData))
                 using (ZipArchive archive = new ZipArchive(ms))
                 {
+                    // 1. Đọc danh sách câu hỏi
                     ZipArchiveEntry? nameFileEntry = archive.GetEntry("name.txt");
-                    if (nameFileEntry != null)
+                    if (nameFileEntry == null) return Page();
+
+                    string[] listQuestions;
+                    using (StreamReader reader = new StreamReader(nameFileEntry.Open()))
                     {
-                        using (StreamReader reader = new StreamReader(nameFileEntry.Open()))
-                        {
-                            string content = await reader.ReadToEndAsync();
-                            listQuestions = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-                        }
+                        string content = await reader.ReadToEndAsync();
+                        listQuestions = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
                     }
 
-                    // Cập nhật totalQuestions Ở ĐÂY sau khi đã đọc xong file
                     int totalQuestions = listQuestions.Length;
 
-                    // KIỂM TRA: Đã hết câu hỏi chưa?
-                    if (currentIndex >= totalQuestions && totalQuestions > 0)
+                    // 2. Kiểm tra kết thúc bài thi
+                    if (currentIndex >= totalQuestions)
                     {
-                        // Đảm bảo lấy lại thông tin user trước khi insert
-                        user = await _userManager.GetUserAsync(User);
-                        //Ép kiểu tường minh (Chắc chắn nhất)
-                        double score = ((double)10 / totalQuestions) * currentPoint;
-                        // Làm tròn đến 2 chữ số thập phân (ví dụ: 6.67)
-                        double finalScore = Math.Round(score, 2);
+                        var user = await _userManager.GetUserAsync(User);
+                        double score = Math.Round(((double)10 / totalQuestions) * currentPoint, 2);
+
                         var finalResult = new ExamResult
                         {
-                            StudentName = user?.FullName ?? "Học sinh ẩn danh", // Không được để null
+                            StudentName = user?.FullName ?? "Học sinh ẩn danh",
                             ClassName = user?.Class ?? "Không rõ lớp",
-                            TestName = Path.GetFileName(decodedPath), // Chỉ lấy tên file cho ngắn gọn
-                            Point = finalScore
+                            TestName = Path.GetFileName(decodedPath),
+                            Point = score
                         };
+
                         await _supabase.From<ExamResult>().Insert(finalResult);
-                        return RedirectToPage("/Result", new { score = finalScore });
+                        return RedirectToPage("/Result", new { score = score });
                     }
 
-                    // Nếu còn câu hỏi, load câu hỏi hiện tại
-                    if (currentIndex < totalQuestions && currentIndex >= 0)
+                    // 3. Load nội dung câu hỏi hiện tại để hiển thị
+                    ZipArchiveEntry? currentQS = archive.GetEntry(listQuestions[currentIndex]);
+                    if (currentQS != null)
                     {
-                        ZipArchiveEntry? nameFileSLQ = archive.GetEntry(listQuestions[currentIndex]);
-                        if (nameFileSLQ != null) await Load(nameFileSLQ);
+                        await LoadQuestionData(currentQS);
                     }
                 }
             }
+            catch (Exception)
+            {
+                return RedirectToPage("/Index");
+            }
+
             return Page();
         }
-        public async Task Load(ZipArchiveEntry? nameFileSLQ)
+
+        private async Task LoadQuestionData(ZipArchiveEntry entry)
         {
-            using (StreamReader reader = new StreamReader(nameFileSLQ!.Open()))
+            using (StreamReader reader = new StreamReader(entry.Open()))
             {
                 string content = await reader.ReadToEndAsync();
                 string[] lines = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
-                // Lưu nội dung câu hỏi
                 Content_Test = lines[1];
 
-                // Tạo danh sách đáp án để xáo trộn
+                // Tạo danh sách đáp án
                 var options = new List<AnswerOption>
                 {
-                    new AnswerOption { Key = "A", Value = lines[2] },
-                    new AnswerOption { Key = "B", Value = lines[3] },
-                    new AnswerOption { Key = "C", Value = lines[4] },
-                    new AnswerOption { Key = "D", Value = lines[5] }
+                    new AnswerOption { Value = lines[2] },
+                    new AnswerOption { Value = lines[3] },
+                    new AnswerOption { Value = lines[4] },
+                    new AnswerOption { Value = lines[5] }
                 };
 
-                // Lưu đáp án đúng thực tế (Nội dung văn bản)
-                string correctKey = lines[6]; // Ví dụ: "A"
-                int correctIdx = correctKey[0] - 'A' + 2; // Chuyển A->2, B->3...
-                current_Answer = lines[correctIdx]; // Đây là nội dung text của câu đúng
+                // Xác định nội dung đáp án đúng dựa trên ký tự A, B, C, D ở dòng 7
+                string correctKey = lines[6].Trim().ToUpper();
+                int correctIdx = correctKey[0] - 'A' + 2;
+                current_Answer = lines[correctIdx];
 
                 // Xáo trộn
                 options.Shuffle();
                 ShuffledAnswers = options;
 
-                // Xử lý hình ảnh
                 if (lines.Length >= 8) Picture = lines[7];
             }
         }
-        #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        public async Task<IActionResult> OnPostChoiceAsync(string path, int currentIndex, int currentPoint, string correctText)
-        #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+
+        public IActionResult OnPostChoice(string path, int currentIndex, int currentPoint, string correctText)
         {
-            // Giải thích: Hào truyền 'correctText' (nội dung câu đúng) từ Form thay vì so sánh A, B, C
+            // So sánh nội dung text để đảm bảo tính đúng đắn sau khi xáo trộn
             if (SelectedAnswer == correctText)
             {
                 currentPoint++;
@@ -161,16 +134,17 @@ namespace Learning.Pages
             return RedirectToPage(new { path = path, index = currentIndex + 1, point = currentPoint });
         }
     }
+
+    // --- Các lớp bổ trợ ---
+
     public class AnswerOption
     {
-        public string? Key { get; set; }    // A, B, C, hoặc D
-        public string? Value { get; set; }  // Nội dung thực tế: "Con bò", "Con gà"...
+        public string? Value { get; set; }
     }
 
     public static class ListExtensions
     {
         private static Random rng = new Random();
-
         public static void Shuffle<T>(this IList<T> list)
         {
             int n = list.Count;
