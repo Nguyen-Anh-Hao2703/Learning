@@ -103,8 +103,10 @@
 
                                 @if (file.EndsWith(".qs"))
                                 {
-                                    <a href="/Test?path=@(System.Net.WebUtility.UrlEncode(Model.GetFileUrl(file)))&index=0&point=0"
-                                       class="btn btn-start btn-sm px-3 fw-bold shadow-sm">📚 Làm bài</a>
+                                    <form>
+                                        <a id="Do" href="/Test?path=@(System.Net.WebUtility.UrlEncode(Model.GetFileUrl(file)))&index=0&point=0"
+                                            class="btn btn-start btn-sm px-3 fw-bold shadow-sm">📚 Làm bài</a>
+                                    </form>
                                 }
 
                                 @if (Model.CurrentUserRole == "Teacher")
@@ -173,3 +175,11 @@
         return new[] { ".jpg", ".png", ".jpeg", ".gif" }.Contains(ext);
     }
 }
+<script>
+    document.querySelector('form').onsubmit = function() {
+        // Khi nhấn nút, hiện cái vòng quay lên
+        document.getElementById('loading').style.display = 'inline-block';
+        // Vô hiệu hóa nút để tránh nhấn nhiều lần
+        document.getElementById('Do').disabled = true;
+    };
+</script>

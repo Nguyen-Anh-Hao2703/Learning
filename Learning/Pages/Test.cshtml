@@ -34,9 +34,20 @@
                 </div>
 
                 <div class="mt-4 text-end">
-                    <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm">Câu tiếp theo</button>
+                    <button type="submit" id="btnNext" class="btn btn-success btn-lg px-5 shadow-sm d-flex align-items-center">
+                        <span>Câu tiếp theo</span>
+                        <div id="loading" class="spinner"></div>
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+<script>
+    document.querySelector('form').onsubmit = function() {
+        // Khi nhấn nút, hiện cái vòng quay lên
+        document.getElementById('loading').style.display = 'inline-block';
+        // Vô hiệu hóa nút để tránh nhấn nhiều lần
+        document.getElementById('btnNext').disabled = true;
+    };
+</script>
