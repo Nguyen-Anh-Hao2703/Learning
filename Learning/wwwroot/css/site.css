@@ -86,6 +86,7 @@ td {
     word-break: break-word; /* Nếu tên bài kiểm tra quá dài thì tự xuống dòng */
 }
 
+/* 1. Định nghĩa hình dáng vòng xoay */
 .spinner {
     display: none; /* Mặc định là ẩn */
     width: 20px;
@@ -97,12 +98,13 @@ td {
     margin-left: 10px;
 }
 
+/* 2. Class QUAN TRỌNG để hiện nó lên */
+.show-loading {
+    display: inline-block !important; /* Phải có !important để đè các class khác */
+}
+
 @keyframes spin {
     to {
         transform: rotate(360deg);
     }
-}
-
-show-loading {
-    display: inline-block !important;
 }

@@ -105,7 +105,9 @@
                                 {
                                     <form>
                                         <a id="Do" href="/Test?path=@(System.Net.WebUtility.UrlEncode(Model.GetFileUrl(file)))&index=0&point=0"
-                                            class="btn btn-start btn-sm px-3 fw-bold shadow-sm">📚 Làm bài</a>
+                                            class="btn btn-start btn-sm px-3 fw-bold shadow-sm">
+                                            <span id="btnDo">📚 Làm bài</span>
+                                        </a>
                                     </form>
                                 }
 
@@ -183,9 +185,9 @@
         loading.classList.add('show-loading');
 
         // 2. Đổi chữ nút bấm (cho chắc ăn)
-        document.getElementById('btnText').innerText = "Đang xử lý...";
+        document.getElementById('btnDo').innerText = "Đang mở bài...";
 
         // 3. Vô hiệu hóa nút
-        document.getElementById('btnNext').disabled = true;
+        document.getElementById('Do').disabled = true;
     };
 </script>
