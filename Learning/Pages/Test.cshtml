@@ -45,9 +45,14 @@
 </div>
 <script>
     document.querySelector('form').onsubmit = function() {
-        // Khi nhấn nút, hiện cái vòng quay lên
-        document.getElementById('loading').style.display = 'inline-block';
-        // Vô hiệu hóa nút để tránh nhấn nhiều lần
+        // 1. Hiện cái vòng quay
+        const loading = document.getElementById('loading');
+        loading.classList.add('show-loading');
+
+        // 2. Đổi chữ nút bấm (cho chắc ăn)
+        document.getElementById('btnText').innerText = "Đang xử lý...";
+
+        // 3. Vô hiệu hóa nút
         document.getElementById('btnNext').disabled = true;
     };
 </script>

@@ -102,3 +102,7 @@ td {
         transform: rotate(360deg);
     }
 }
+
+show-loading {
+    display: inline-block !important;
+}
