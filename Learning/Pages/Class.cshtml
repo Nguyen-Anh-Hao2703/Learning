@@ -178,16 +178,6 @@
     }
 }
 
-<script>
-    document.querySelector('form').onsubmit = function() {
-        // 1. Hiện cái vòng quay
-        const loading = document.getElementById('loading');
-        loading.classList.add('show-loading');
-
-        // 2. Đổi chữ nút bấm (cho chắc ăn)
-        document.getElementById('btnDo').innerText = "Đang mở bài...";
-
-        // 3. Vô hiệu hóa nút
-        document.getElementById('Do').disabled = true;
-    };
-</script>
+@section Scripts {
+    <script src="~/js/site.js"></script>
+}
