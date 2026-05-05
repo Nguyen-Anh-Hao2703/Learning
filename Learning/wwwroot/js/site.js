@@ -6,25 +6,24 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (quizForm) {
         quizForm.addEventListener('submit', function (event) {
-            // 1. Hiển thị Spinner ngay lập tức
-            const loading = document.getElementById('loading');
-            const text = document.getElementById('btnText');
+            // 1. Tạm dừng việc gửi form lên Server
+            event.preventDefault();
 
-            if (loading) {
-                loading.style.setProperty('display', 'inline-block', 'important');
-                loading.classList.add('active'); // Thêm class nếu cần
-            }
-            if (text) text.innerText = "Đang nộp bài...";
-
-            // 2. Vô hiệu hóa nút để tránh nhấn lần 2
+            const spin = document.getElementById('loading');
+            const txt = document.getElementById('btnText');
             const btn = document.getElementById('btnNext');
-            if (btn) {
-                btn.style.opacity = '0.5';
-                btn.style.pointerEvents = 'none';
-            }
 
-            // C# sẽ tự động chạy tiếp sau khi JS thực hiện xong các lệnh trên
-            console.log("JS đã kích hoạt xong, giờ đợi C# xử lý!");
+            // 2. Kích hoạt hiệu ứng ngay lập tức
+            if (spin) spin.style.setProperty('display', 'inline-block', 'important');
+            if (txt) txt.innerText = "Đang chấm điểm...";
+            if (btn) btn.style.pointerEvents = 'none';
+
+            console.log("JS đã chiếm quyền, đang chuẩn bị trả cho C#...");
+
+            // 3. Đợi 100ms để trình duyệt kịp vẽ spinner rồi mới nộp form thật sự
+            setTimeout(() => {
+                quizForm.submit();
+            }, 100);
         });
     }
 });
