@@ -4,24 +4,25 @@
     ViewData["Title"] = "Làm bài thi";
 }
 <style>
-    /* Hình dáng mặc định của spinner */
+    /* Spinner mặc định sẽ ẩn */
     .spinner {
-        width: 22px;
-        height: 22px;
-        border: 3px solid rgba(255, 255, 255, 0.3);
+        display: none;
+        width: 1.2rem;
+        height: 1.2rem;
+        vertical-align: text-bottom;
+        border: .2em solid currentColor;
+        border-right-color: transparent;
         border-radius: 50%;
-        border-top-color: #ffffff;
-        animation: spin 0.8s linear infinite;
-        margin-left: 12px;
-        display: none; /* Mặc định ẩn */
+        animation: spinner-border .75s linear infinite;
+        margin-left: 10px;
     }
 
-    /* Class này sẽ được JS thêm vào để HIỆN spinner */
-    .show-loading {
+    /* Quan trọng: Khi nút có class 'is-loading', spinner phải hiện */
+    .btn.is-loading .spinner {
         display: inline-block !important;
     }
 
-    @@keyframes spin {
+    @@keyframes spinner-border {
         to {
             transform: rotate(360deg);
         }
