@@ -5,18 +5,25 @@ document.addEventListener("DOMContentLoaded", function () {
     const quizForm = document.querySelector('form');
     if (quizForm) {
         quizForm.addEventListener('submit', function () {
-            const btn = document.getElementById('btnNext');
+            const spin = document.getElementById('loading');
             const txt = document.getElementById('btnText');
+            const btn = document.getElementById('btnNext');
 
-            if (btn) {
-                // Thêm class để kích hoạt CSS hiển thị spinner
-                btn.classList.add('is-loading');
-                // Vô hiệu hóa để tránh nhấn nhiều lần
-                btn.disabled = true;
+            if (spin) {
+                // Thêm class active để hiện spinner
+                spin.classList.remove('d-none');
+                spin.classList.add('active');
             }
             if (txt) {
-                txt.innerText = "Đang nộp bài...";
+                txt.innerText = "Đang kiểm tra bài...";
             }
+            if (btn) {
+                // Khóa nút để không cho nhấn lần 2
+                btn.classList.add('disabled');
+                btn.style.pointerEvents = 'none';
+            }
+
+            console.log("Spinner đã được kích hoạt!");
         });
     }
 });

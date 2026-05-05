@@ -27,6 +27,10 @@
             transform: rotate(360deg);
         }
     }
+
+    #loading.active {
+        display: inline-block !important;
+    }
 </style>
 
 <div class="container mt-5">
@@ -59,9 +63,12 @@
                 </div>
 
                 <div class="mt-4 text-end">
-                    <button type="submit" id="btnNext" class="btn btn-success btn-lg px-5 shadow-sm d-flex align-items-center">
+                    <button type="submit" id="btnNext" class="btn btn-success d-flex align-items-center">
                         <span id="btnText">Câu tiếp theo</span>
-                        <div id="loading" class="spinner"></div>
+                        <!-- Spinner này mặc định ẩn bằng class d-none của Bootstrap -->
+                        <div id="loading" class="spinner-border spinner-border-sm ms-2 d-none" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
                     </button>
                 </div>
             </form>
