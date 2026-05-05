@@ -3,27 +3,28 @@ console.log("JS đã chạy!");
 
 document.addEventListener("DOMContentLoaded", function () {
     const quizForm = document.querySelector('form');
-    if (quizForm) {
-        quizForm.addEventListener('submit', function () {
-            const spin = document.getElementById('loading');
-            const txt = document.getElementById('btnText');
-            const btn = document.getElementById('btnNext');
 
-            if (spin) {
-                // Thêm class active để hiện spinner
-                spin.classList.remove('d-none');
-                spin.classList.add('active');
+    if (quizForm) {
+        quizForm.addEventListener('submit', function (event) {
+            // 1. Hiển thị Spinner ngay lập tức
+            const loading = document.getElementById('loading');
+            const text = document.getElementById('btnText');
+
+            if (loading) {
+                loading.style.setProperty('display', 'inline-block', 'important');
+                loading.classList.add('active'); // Thêm class nếu cần
             }
-            if (txt) {
-                txt.innerText = "Đang kiểm tra bài...";
-            }
+            if (text) text.innerText = "Đang nộp bài...";
+
+            // 2. Vô hiệu hóa nút để tránh nhấn lần 2
+            const btn = document.getElementById('btnNext');
             if (btn) {
-                // Khóa nút để không cho nhấn lần 2
-                btn.classList.add('disabled');
+                btn.style.opacity = '0.5';
                 btn.style.pointerEvents = 'none';
             }
 
-            console.log("Spinner đã được kích hoạt!");
+            // C# sẽ tự động chạy tiếp sau khi JS thực hiện xong các lệnh trên
+            console.log("JS đã kích hoạt xong, giờ đợi C# xử lý!");
         });
     }
 });
