@@ -40,9 +40,9 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync(bool? nguoi_moi)
     {
+        var user = await _userManager.FindByNameAsync(User.Identity!.Name!);
         if (User.Identity?.IsAuthenticated == true)
         {
-            var user = await _userManager.FindByNameAsync(User.Identity.Name!);
             if (user != null)
             {
                 NameSchool = user.School!;
@@ -52,6 +52,8 @@ public class IndexModel : PageModel
             }
             if (nguoi_moi == true) Danh_hiệu = "Người mới";
         }
+        string id = user!.Id;
+        await GetStudentTitle(id);
     }
 
     public async Task<IActionResult> OnGetDownloadCertificateAsync()
