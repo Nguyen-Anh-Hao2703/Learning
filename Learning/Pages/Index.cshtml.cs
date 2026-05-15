@@ -1,8 +1,10 @@
+using Learning.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Learning.Models;
 using Supabase;
+using System.IO.Compression;
+using System.Runtime.InteropServices;
 
 public class IndexModel : PageModel
 {
@@ -14,7 +16,7 @@ public class IndexModel : PageModel
         _userManager = userManager;
         _configuration = configuration;
     }
-
+    public string? Danh_hiệu;
     public string NameSchool { get; set; } = "";
     public string NameClass { get; set; } = "";
     public string CurrentUserRole { get; set; } = "";
@@ -36,7 +38,7 @@ public class IndexModel : PageModel
         return client;
     }
 
-    public async Task OnGetAsync()
+    public async Task OnGetAsync(bool? nguoi_moi)
     {
         if (User.Identity?.IsAuthenticated == true)
         {
@@ -48,7 +50,133 @@ public class IndexModel : PageModel
                 CurrentUserRole = user.Role;
                 await LoadLessons(user.School!, user.Class!);
             }
+            if (nguoi_moi == true) Danh_hiệu = "Người mới";
         }
+    }
+
+    public async Task<IActionResult> OnGetDownloadCertificateAsync()
+    {
+        // 1. Lấy thông tin người dùng đang đăng nhập
+        var user = await _userManager.FindByNameAsync(User.Identity!.Name!);
+        if (user == null) return NotFound();
+
+        string name = user.FullName ?? "Người dùng";
+        string templateName = "";
+        string fileDisplayName = "";
+
+        // 2. Định cấu hình File Mẫu và Tên File Tải về dựa vào Role và Danh Hiệu
+        if (user.Role == "Student")
+        {
+            templateName = (Danh_hiệu == "Xuất sắc") ? "Chung_Chi_Xuat_Sac.docx" : "Chung_Chi_Gioi.docx";
+            fileDisplayName = $"Chứng chỉ Học {Danh_hiệu} - {name}.docx";
+        }
+        else if (user.Role == "Teacher")
+        {
+            templateName = (Danh_hiệu == "Xuất sắc") ? "Chung_Chi_Xuat_Sac.docx" : "Chung_Chi_Gioi.docx";
+            fileDisplayName = $"Chứng chỉ Dạy {Danh_hiệu} - {name}.docx";
+        }
+        else
+        {
+            return Page(); // Role không hợp lệ
+        }
+
+        try
+        {
+            // 3. Gọi hàm dùng chung để xử lý file và lấy mảng byte dữ liệu về
+            byte[] fileBytes = await TaoFileChungChiTuTemplateAsync(templateName, name, user.Role);
+
+            // 4. Trả file về cho trình duyệt (Đầy đủ tiếng Việt có dấu)
+            return File(fileBytes, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", fileDisplayName);
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError(string.Empty, "Có lỗi xảy ra khi tạo chứng chỉ: " + ex.Message);
+            return Page();
+        }
+    }
+
+    // 🛠️ HÀM DÙNG CHUNG: Nơi xử lý ma thuật nén/giải nén và thay thế từ
+    private async Task<byte[]> TaoFileChungChiTuTemplateAsync(string templateName, string userName, string role)
+    {
+        // Tạo đường dẫn thư mục tạm thời duy nhất
+        string uniqueId = Guid.NewGuid().ToString();
+        string tempFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"Temp_Cert_{uniqueId}");
+        string pathTemplateGoc = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates", templateName);
+
+        // Giải nén file mẫu
+        ZipFile.ExtractToDirectory(pathTemplateGoc, tempFolder);
+
+        // Tìm và đọc file XML cấu trúc nội dung của file Word
+        string xmlPath = Path.Combine(tempFolder, "word", "document.xml");
+        string body = await System.IO.File.ReadAllTextAsync(xmlPath);
+
+        // Tiến hành thay thế chuỗi văn bản
+        body = body.Replace("[Tên]", userName)
+                   .Replace("[Ngày tháng]", DateTime.Now.ToString("dd/MM/yyyy"));
+
+        // Nếu là Giáo viên thì tự động biến chữ "Học" thành "Dạy" trong file mẫu
+        if (role == "Teacher")
+        {
+            body = body.Replace("Học", "Dạy");
+        }
+
+        // Ghi đè lại nội dung mới vào file XML
+        await System.IO.File.WriteAllTextAsync(xmlPath, body);
+
+        // Đóng gói ngược lại thành file .docx tạm thời
+        string tempZipOutput = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"Temp_Out_{uniqueId}.docx");
+        ZipFile.CreateFromDirectory(tempFolder, tempZipOutput, CompressionLevel.Optimal, false);
+
+        // Đọc toàn bộ file vào bộ nhớ dưới dạng mảng byte
+        byte[] fileBytes = await System.IO.File.ReadAllBytesAsync(tempZipOutput);
+
+        // DỌN DẸP SẠCH SẼ SERVER (Không để lại file rác)
+        if (Directory.Exists(tempFolder)) Directory.Delete(tempFolder, true);
+        if (System.IO.File.Exists(tempZipOutput)) System.IO.File.Delete(tempZipOutput);
+
+        return fileBytes;
+    }
+
+    public async Task<string> GetStudentTitle(string userId)
+    {
+        var client = await GetSupabaseClient();
+        int Id = Convert.ToInt32(userId);
+        // 1. Lấy danh sách điểm từ Supabase nơi điểm >= 9
+        var results1 = await client.From<ExamResult>()
+            .Where(x => x.Id == Id)
+            .Where(x => x.Point >= 9)
+            .Get();
+        var results2 = await client.From<ExamResult>()
+            .Where(x => x.Id == Id)
+            .Where(x => x.Point >= 8)
+            .Get();
+        var results3 = await client.From<ExamResult>()
+            .Where(x => x.Id == Id)
+            .Where(x => x.Point >= 7)
+            .Get();
+        var results4 = await client.From<ExamResult>()
+            .Where(x => x.Id == Id)
+            .Where(x => x.Point >= 5)
+            .Get();
+        var results5 = await client.From<ExamResult>()
+            .Where(x => x.Id == Id)
+            .Where(x => x.Point < 5)
+            .Get();
+
+        int count = results1.Models.Count;
+        int count2 = results2.Models.Count;
+        int count3 = results3.Models.Count;
+        int count4 = results4.Models.Count;
+        int count5 = results5.Models.Count;
+
+        // 2. Xét danh hiệu
+        if (count >= 7) return Danh_hiệu = "Xuất sắc";
+        if (count2 > 2) return Danh_hiệu = "Giỏi";
+        if (count3 > 2) return Danh_hiệu = "Khá";
+        if (count4 > 2) return Danh_hiệu = "Trung bình";
+        if (count5 > 2) return Danh_hiệu = "Chưa đạt";
+
+        return "Thành viên mới";
     }
 
     private async Task LoadLessons(string school, string className)

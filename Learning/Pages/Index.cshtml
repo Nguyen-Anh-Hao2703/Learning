@@ -1,4 +1,4 @@
-﻿@page
+﻿@page "{nguoi_moi:bool?}"
 @model IndexModel
 @{
     ViewData["Title"] = "Trang chủ";
@@ -10,6 +10,18 @@
         <div class="text-center mb-5">
             <h1 class="display-4">Chào @User.Identity.Name!</h1>
             <p class="lead">Hệ thống học tập: <b>@Model.NameSchool</b> - Lớp: <b>@Model.NameClass</b></p>
+        </div>
+        <div class="certificate-box" id="certificateCard">
+            @if(@Model.Danh_hiệu == "Xuất sắc")
+            {
+                <div>
+                    Chúc mừng. Bạn đã đạt được danh hiệu học sinh xuất sắc
+                    <form method="post" asp-page-handler="OnGetDownloadCertificateAsync">
+                        <button type="submit" class="btn btn-primary">Nhận chứng chỉ</button>
+                    </form>
+
+                </div>
+            }
         </div>
 
         @if (Model.CurrentUserRole == "Teacher")
@@ -81,3 +93,16 @@
         </div>
     }
 </div>
+
+<script>
+    function showCertificate() {
+        // Lấy phần tử div qua ID
+        var cert = document.getElementById("certificateCard");
+
+        // Thay đổi display từ 'none' thành 'block'
+        cert.style.display = "block";
+
+        // Có thể thêm hiệu ứng nhỏ bằng code
+        console.log("Đã hiển thị chứng chỉ học sinh xuất sắc!");
+    }
+</script>
