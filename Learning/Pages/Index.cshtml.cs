@@ -38,8 +38,13 @@ public class IndexModel : PageModel
         return client;
     }
 
-    public async Task OnGetAsync(bool? nguoi_moi)
+    public async Task<IActionResult> OnGetAsync(bool? nguoi_moi)
     {
+        if (User.Identity == null || !User.Identity.IsAuthenticated || string.IsNullOrEmpty(User.Identity.Name))
+        {
+            // Nếu chưa đăng nhập, tự động chuyển hướng sang trang Đăng nhập (Identity)
+            return RedirectToPage("/Login", new { area = "Identity" });
+        }
         var user = await _userManager.FindByNameAsync(User.Identity!.Name!);
         if (User.Identity?.IsAuthenticated == true)
         {
@@ -54,15 +59,11 @@ public class IndexModel : PageModel
         }
         string id = user!.Id;
         await GetStudentTitle(id);
+        return Page();
     }
 
     public async Task<IActionResult> OnGetDownloadCertificateAsync()
     {
-        if (User.Identity == null || !User.Identity.IsAuthenticated || string.IsNullOrEmpty(User.Identity.Name))
-        {
-            // Nếu chưa đăng nhập, tự động chuyển hướng sang trang Đăng nhập (Identity)
-            return RedirectToPage("/Login", new { area = "Identity" });
-        }
         // 1. Lấy thông tin người dùng đang đăng nhập
         var user = await _userManager.FindByNameAsync(User.Identity!.Name!);
         if (user == null) return NotFound();
