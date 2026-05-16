@@ -58,6 +58,11 @@ public class IndexModel : PageModel
 
     public async Task<IActionResult> OnGetDownloadCertificateAsync()
     {
+        if (User.Identity == null || !User.Identity.IsAuthenticated || string.IsNullOrEmpty(User.Identity.Name))
+        {
+            // Nếu chưa đăng nhập, tự động chuyển hướng sang trang Đăng nhập (Identity)
+            return RedirectToPage("/Login", new { area = "Identity" });
+        }
         // 1. Lấy thông tin người dùng đang đăng nhập
         var user = await _userManager.FindByNameAsync(User.Identity!.Name!);
         if (user == null) return NotFound();
