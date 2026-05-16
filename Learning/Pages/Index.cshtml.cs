@@ -43,7 +43,7 @@ public class IndexModel : PageModel
         if (User.Identity == null || !User.Identity.IsAuthenticated || string.IsNullOrEmpty(User.Identity.Name))
         {
             // Nếu chưa đăng nhập, tự động chuyển hướng sang trang Đăng nhập (Identity)
-            return RedirectToPage("/Login", new { area = "Identity" });
+            return RedirectToPage("/Login");
         }
         var user = await _userManager.FindByNameAsync(User.Identity!.Name!);
         if (User.Identity?.IsAuthenticated == true)
