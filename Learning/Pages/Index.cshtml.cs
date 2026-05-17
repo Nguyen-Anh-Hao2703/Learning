@@ -58,7 +58,7 @@ public class IndexModel : PageModel
             if (nguoi_moi == true) Danh_hiệu = "Người mới";
         }
         string id = user!.Id!;
-        //await GetStudentTitle(id);
+        await GetStudentTitle(id);
         return Page();
     }
     public async Task<IActionResult> OnGetDownloadCertificateAsync()
