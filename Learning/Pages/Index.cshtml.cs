@@ -58,10 +58,9 @@ public class IndexModel : PageModel
             if (nguoi_moi == true) Danh_hiệu = "Người mới";
         }
         string id = user!.Id!;
-        await GetStudentTitle(id);
+        //await GetStudentTitle(id);
         return Page();
     }
-
     public async Task<IActionResult> OnGetDownloadCertificateAsync()
     {
         // 1. Lấy thông tin người dùng đang đăng nhập
@@ -148,19 +147,15 @@ public class IndexModel : PageModel
     public async Task<string> GetStudentTitle(string userId)
     {
         var client = await GetSupabaseClient();
-        // 1. Lấy danh sách điểm từ Supabase nơi điểm >= 9
-        // Đổi x.student_id thành x.Student_Id và x.point thành x.Point cho khớp Model
-        var results1 = await client.From<ExamResult>().Where(x => x.Student_Id == userId).Where(x => x.Point >= 9).Get();
-        var results2 = await client.From<ExamResult>().Where(x => x.Student_Id == userId).Where(x => x.Point >= 8).Get();
-        var results3 = await client.From<ExamResult>().Where(x => x.Student_Id == userId).Where(x => x.Point >= 7).Get();
-        var results4 = await client.From<ExamResult>().Where(x => x.Student_Id == userId).Where(x => x.Point >= 5).Get();
-        var results5 = await client.From<ExamResult>().Where(x => x.Student_Id == userId).Where(x => x.Point < 5).Get();
+        var response = await client.From<ExamResult>().Match(new Dictionary<string, string> { { "student_id", userId } }).Get();
+        var allResults = response?.Models ?? new List<ExamResult>();
 
-        int count = results1?.Models?.Count ?? 0;
-        int count2 = results2?.Models?.Count ?? 0;
-        int count3 = results3?.Models?.Count ?? 0;
-        int count4 = results4?.Models?.Count ?? 0;
-        int count5 = results5?.Models?.Count ?? 0;
+        // Bước 2: Dùng LINQ thuần của C# để đếm (Tuyệt đối không lo sập app nữa!)
+        int count = allResults.Count(x => x.Point >= 9);
+        int count2 = allResults.Count(x => x.Point >= 8);
+        int count3 = allResults.Count(x => x.Point >= 7);
+        int count4 = allResults.Count(x => x.Point >= 5);
+        int count5 = allResults.Count(x => x.Point < 5);
 
         // 2. Xét danh hiệu
         if (count >= 7) return Danh_hiệu = "Xuất sắc";

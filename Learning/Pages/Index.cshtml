@@ -11,7 +11,7 @@
             <h1 class="display-4">Chào @User.Identity.Name!</h1>
             <p class="lead">Hệ thống học tập: <b>@Model.NameSchool</b> - Lớp: <b>@Model.NameClass</b></p>
         </div>
-        <div class="certificate-box" id="certificateCard">
+        @* <div class="certificate-box" id="certificateCard">
             @if(@Model.Danh_hiệu == "Xuất sắc")
             {
                 <div>
@@ -22,7 +22,7 @@
 
                 </div>
             }
-        </div>
+        </div> *@
 
         @if (Model.CurrentUserRole == "Teacher")
         {
