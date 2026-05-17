@@ -183,7 +183,7 @@ public class IndexModel : PageModel
         if (count4 > 2) return Danh_hiệu = "Trung bình";
         if (count5 > 2) return Danh_hiệu = "Chưa đạt";
 
-        return "Thành viên mới";
+        return Danh_hiệu = "Thành viên mới";
     }
 
     private async Task LoadLessons(string school, string className)
