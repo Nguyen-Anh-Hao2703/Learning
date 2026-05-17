@@ -8,8 +8,8 @@ namespace Learning.Models // Đảm bảo có namespace để bên trang Test g�
     [Table("ExamResults")]
     public class ExamResult : BaseModel
     {
-        [PrimaryKey("id", false)]
-        public int Id { get; set; }
+        [Column("id")]
+        public int? Id { get; set; }
 
         [Column("student_name")]
         public string? StudentName { get; set; }
@@ -21,9 +21,12 @@ namespace Learning.Models // Đảm bảo có namespace để bên trang Test g�
         public string? TestName { get; set; }
 
         [Column("point")]
-        public double Point { get; set; }
+        public double? Point { get; set; }
+
+        [Column("student_id")]
+        public string? Student_Id { get; set; } = string.Empty;
 
         [Column("created_at")]
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime? CreatedAt { get; set; } = DateTime.Now;
     }
 }

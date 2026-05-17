@@ -120,9 +120,10 @@ namespace Learning.Pages
 
                         var finalResult = new ExamResult
                         {
-                            StudentName = user?.FullName ?? "Học sinh ẩn danh",
-                            ClassName = user?.Class ?? "Không rõ lớp",
+                            StudentName = user!.FullName ?? "Học sinh ẩn danh",
+                            ClassName = user!.Class ?? "Không rõ lớp",
                             TestName = Path.GetFileName(decodedPath),
+                            Student_Id = user!.Id ?? "KHông rõ ID",
                             Point = finalScore
                         };
 

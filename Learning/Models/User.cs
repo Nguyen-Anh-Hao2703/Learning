@@ -5,7 +5,7 @@ namespace Learning.Models
 {
     public class User : IdentityUser
     {
-        public int StudentIntId { get; set; }
+        public string Id { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
 
         [Display(Name = "Họ và Tên")]

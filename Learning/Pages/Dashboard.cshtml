@@ -37,7 +37,7 @@
                             <td class="align-middle">@item.ClassName</td>
                             <td class="align-middle">@item.TestName</td>
                             <td class="align-middle fw-bold text-primary">@item.Point</td>
-                            <td class="align-middle">@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td class="align-middle">@(item.CreatedAt != null ? DateTime.Parse(item.CreatedAt.ToString()).ToString("dd/MM/yyyy") : "")</td>
                         </tr>
                     }
                 }
