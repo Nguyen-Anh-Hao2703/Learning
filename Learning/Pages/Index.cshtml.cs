@@ -57,8 +57,8 @@ public class IndexModel : PageModel
             }
             if (nguoi_moi == true) Danh_hiệu = "Người mới";
         }
-        string id = user!.Id;
-        await GetStudentTitle(id);
+        int idSoNguyen = Math.Abs(user.Id.GetHashCode());
+        await GetStudentTitle(idSoNguyen);
         return Page();
     }
 
@@ -145,29 +145,28 @@ public class IndexModel : PageModel
         return fileBytes;
     }
 
-    public async Task<string> GetStudentTitle(string userId)
+    public async Task<string> GetStudentTitle(int userId)
     {
         var client = await GetSupabaseClient();
-        int Id = Convert.ToInt32(userId);
         // 1. Lấy danh sách điểm từ Supabase nơi điểm >= 9
         var results1 = await client.From<ExamResult>()
-            .Where(x => x.Id == Id)
+            .Where(x => x.Id == userId)
             .Where(x => x.Point >= 9)
             .Get();
         var results2 = await client.From<ExamResult>()
-            .Where(x => x.Id == Id)
+            .Where(x => x.Id == userId)
             .Where(x => x.Point >= 8)
             .Get();
         var results3 = await client.From<ExamResult>()
-            .Where(x => x.Id == Id)
+            .Where(x => x.Id == userId)
             .Where(x => x.Point >= 7)
             .Get();
         var results4 = await client.From<ExamResult>()
-            .Where(x => x.Id == Id)
+            .Where(x => x.Id == userId)
             .Where(x => x.Point >= 5)
             .Get();
         var results5 = await client.From<ExamResult>()
-            .Where(x => x.Id == Id)
+            .Where(x => x.Id == userId)
             .Where(x => x.Point < 5)
             .Get();
 

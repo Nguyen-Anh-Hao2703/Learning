@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Learning.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260321040920_FinalIdentitySetup")]
-    partial class FinalIdentitySetup
+    [Migration("20260517090335_InitialFix")]
+    partial class InitialFix
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -90,6 +90,9 @@ namespace Learning.Migrations
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
+
+                    b.Property<int>("StudentIntId")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean");
