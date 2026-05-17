@@ -29,26 +29,30 @@ public class DashboardModel : PageModel
     public async Task<IActionResult> OnGetAsync(string filterClass, string filterTest)
     {
         var user = await _userManager.GetUserAsync(User);
-        if(user!.Role != "Teacher")
+        if (user!.Role != "Teacher")
         {
-            return RedirectToPage("AccessDenied", new { namePage = "Trang xem điểm dành cho giáo viên"});
+            return RedirectToPage("AccessDenied", new { namePage = "Trang xem điểm dành cho giáo viên" });
         }
-        var query = _supabase.From<ExamResult>();
 
+        // 1. Khởi tạo query chuẩn tầng Postgrest để không bị lệch kiểu dữ liệu khi dùng .Where()
+        Supabase.Postgrest.Interfaces.IPostgrestTable<ExamResult> query = _supabase.From<ExamResult>();
+
+        // 2. Bây giờ gán đè thoải mái, hết sạch lỗi convert type
         if (!string.IsNullOrEmpty(filterClass))
         {
-            query.Where(x => x.ClassName == filterClass);
+            query = query.Where(x => x.ClassName == filterClass);
         }
 
         if (!string.IsNullOrEmpty(filterTest))
         {
-            // Mẹo: Nếu filterTest là một URL, ta chỉ lấy phần tên file cuối cùng
             string fileName = Path.GetFileName(System.Net.WebUtility.UrlDecode(filterTest));
-            query.Where(x => x.TestName == fileName);
+            query = query.Where(x => x.TestName == fileName);
         }
 
+        // 3. Thực hiện lấy dữ liệu an toàn
         var result = await query.Get();
-        ListResults = result.Models; // Gán danh sách kết quả vào biến hiển thị
+        ListResults = result?.Models ?? new List<ExamResult>();
+
         return Page();
     }
 }

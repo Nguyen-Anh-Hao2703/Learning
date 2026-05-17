@@ -149,26 +149,12 @@ public class IndexModel : PageModel
     {
         var client = await GetSupabaseClient();
         // 1. Lấy danh sách điểm từ Supabase nơi điểm >= 9
-        var results1 = await client.From<ExamResult>()
-            .Where(x => x.Student_Id == userId)
-            .Where(x => x.Point >= 9)
-            .Get();
-        var results2 = await client.From<ExamResult>()
-            .Where(x => x.Student_Id == userId)
-            .Where(x => x.Point >= 8)
-            .Get();
-        var results3 = await client.From<ExamResult>()
-            .Where(x => x.Student_Id == userId)
-            .Where(x => x.Point >= 7)
-            .Get();
-        var results4 = await client.From<ExamResult>()
-            .Where(x => x.Student_Id == userId)
-            .Where(x => x.Point >= 5)
-            .Get();
-        var results5 = await client.From<ExamResult>()
-            .Where(x => x.Student_Id == userId)
-            .Where(x => x.Point < 5)
-            .Get();
+        // Đổi x.student_id thành x.Student_Id và x.point thành x.Point cho khớp Model
+        var results1 = await client.From<ExamResult>().Where(x => x.Student_Id == userId).Where(x => x.Point >= 9).Get();
+        var results2 = await client.From<ExamResult>().Where(x => x.Student_Id == userId).Where(x => x.Point >= 8).Get();
+        var results3 = await client.From<ExamResult>().Where(x => x.Student_Id == userId).Where(x => x.Point >= 7).Get();
+        var results4 = await client.From<ExamResult>().Where(x => x.Student_Id == userId).Where(x => x.Point >= 5).Get();
+        var results5 = await client.From<ExamResult>().Where(x => x.Student_Id == userId).Where(x => x.Point < 5).Get();
 
         int count = results1?.Models?.Count ?? 0;
         int count2 = results2?.Models?.Count ?? 0;
