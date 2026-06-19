@@ -12,3 +12,13 @@
         Điểm: @Model.Point
     </p>
 </div>
+@section Scripts {
+    <script type="text/javascript">
+        // Vừa vào trang là khóa chặt lịch sử trình duyệt tại đây luôn
+        function preventBack() {
+            window.history.forward();
+        }
+        setTimeout("preventBack()", 0);
+        window.onunload = function () { null };
+    </script>
+}
