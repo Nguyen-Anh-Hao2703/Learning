@@ -4,11 +4,23 @@
     ViewData["Title"] = "Xem điểm";
 }
 <div>
-    <p class="display-3">
+    @if (@Model.Point>=5)
+    {
+        <h2>Chúc mừng bạn đã trên trung bình</h2>
+    }
+    @if (@Model.Point < 5)
+    {
+        <h2>Xin chia buồn</h2>
+    }
+    <p class="green_layout">
         Tên: @Model.UserName
+    </p>
 
+    <p class="display-3">
         Lớp: @Model.Class
+    </p>
 
+    <p class="display-3">
         Điểm: @Model.Point
     </p>
 </div>
