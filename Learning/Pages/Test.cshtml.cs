@@ -2,6 +2,7 @@ using Learning.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Supabase.Postgrest;
 using System.IO.Compression;
 
 namespace Learning.Pages
@@ -118,16 +119,19 @@ namespace Learning.Pages
                         var user = await _userManager.GetUserAsync(User);
                         double finalScore = Math.Round(((double)10 / listQuestions.Length) * updatedPoint, 2);
 
+                        // TẠO ĐỐI TƯỢNG BẰNG CÁCH KHỞI TẠO MỚI TINH ĐỂ TRÁNH XUNG ĐỘT BASEMODEL
                         var finalResult = new ExamResult
                         {
-                            StudentName = user!.FullName ?? "Học sinh ẩn danh",
-                            ClassName = user!.Class ?? "Không rõ lớp",
+                            StudentName = user?.FullName ?? "Học sinh ẩn danh",
+                            ClassName = user?.Class ?? "Không rõ lớp",
                             TestName = Path.GetFileName(decodedPath),
-                            Student_Id = user!.Id ?? "KHông rõ ID",
+                            Student_Id = user?.Id ?? "Không rõ ID", // Đã sửa chữ H viết thường
                             Point = finalScore
                         };
 
-                        await _supabase.From<ExamResult>().Insert(finalResult);
+                        // Ghi điểm bằng QueryOptions và ReturnType.Representation cực kỳ chuẩn bài
+                        await _supabase.From<ExamResult>().Insert(finalResult, new QueryOptions { Returning = QueryOptions.ReturnType.Representation });
+
                         return RedirectToPage("/Result", new { score = finalScore });
                     }
                 }
