@@ -33,6 +33,24 @@ namespace Learning.Pages
 
         public async Task<IActionResult> OnGetAsync(string path, int index, int? point)
         {
+            var user_Test = await _userManager.GetUserAsync(User);
+            string decodedPath_Test = System.Net.WebUtility.UrlDecode(path);
+            string currentTestName = Path.GetFileName(decodedPath_Test);
+
+            // Truy vấn nhanh lên Supabase để check trùng bằng .Match
+            var checkExist = await _supabase.From<ExamResult>().Match(new Dictionary<string, string>
+            {
+                { "student_id", user_Test?.Id ?? "" },
+                { "test_name", currentTestName }
+            }).Get();
+
+            // Nếu đã tồn tại dữ liệu điểm của bài này rồi -> Đá thẳng họ ra trang kết quả hoặc trang chủ, không cho tính điểm tiếp!
+            if (checkExist?.Models != null && checkExist.Models.Count > 0)
+            {
+                // Có thể lấy điểm cũ gửi qua hoặc chuyển thẳng về trang chủ công bố bài đã nộp
+                return RedirectToPage("/Result", new { score = checkExist.Models[0].Point });
+            }
+
             if (string.IsNullOrEmpty(path)) return RedirectToPage("/Index");
 
             url = path;
@@ -93,23 +111,6 @@ namespace Learning.Pages
 
         public async Task<IActionResult> OnPostChoice(string path, int currentIndex, int currentPoint, string correctText)
         {
-            var user_Test = await _userManager.GetUserAsync(User);
-            string decodedPath_Test = System.Net.WebUtility.UrlDecode(path);
-            string currentTestName = Path.GetFileName(decodedPath_Test);
-
-            // Truy vấn nhanh lên Supabase để check trùng bằng .Match
-            var checkExist = await _supabase.From<ExamResult>().Match(new Dictionary<string, string>
-            {
-                { "student_id", user_Test?.Id ?? "" },
-                { "test_name", currentTestName }
-            }).Get();
-
-            // Nếu đã tồn tại dữ liệu điểm của bài này rồi -> Đá thẳng họ ra trang kết quả hoặc trang chủ, không cho tính điểm tiếp!
-            if (checkExist?.Models != null && checkExist.Models.Count > 0)
-            {
-                // Có thể lấy điểm cũ gửi qua hoặc chuyển thẳng về trang chủ công bố bài đã nộp
-                return RedirectToPage("/Result", new { score = checkExist.Models[0].Point });
-            }
 
             // 1. Kiểm tra đáp án câu hiện tại và cộng điểm vào biến local
             int updatedPoint = currentPoint;
